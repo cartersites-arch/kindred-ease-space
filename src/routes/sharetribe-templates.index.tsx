@@ -63,7 +63,7 @@ function TemplateStorePage() {
         <section className="border-t border-border bg-muted/30">
           <div className="mx-auto max-w-4xl px-6 py-14">
             <h2 className="text-center text-2xl font-bold tracking-tight">
-              Every template includes the core Sharetribe flows
+              Built on the core Sharetribe flows
             </h2>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {TEMPLATE_PAGES.map((p) => (
@@ -76,7 +76,11 @@ function TemplateStorePage() {
                 </div>
               ))}
             </div>
-            <p className="mt-8 text-center text-sm text-muted-foreground">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Inquiry-only designs have no checkout and some search pages have no map; each
+              template's page lists exactly what it includes.
+            </p>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
               Each download is a standalone React + Tailwind project: run <code>npm install</code>{" "}
               and <code>npm run dev</code>, rebrand from one file, and port pages into your
               Sharetribe Web Template fork.

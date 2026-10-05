@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { canonicalUrl } from "@/lib/canonical";
 import {
   TEMPLATE_FLOW_LABEL,
-  TEMPLATE_PAGES,
   formatTemplatePrice,
   getStoreTemplate,
+  templatePages,
   templatePreviewPath,
   templateThumbnailPath,
 } from "@/lib/template-store";
@@ -144,7 +144,7 @@ function TemplateDetailPage() {
 
             <h2 className="mt-10 text-xl font-bold">Pages included</h2>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {TEMPLATE_PAGES.map((p) => (
+              {templatePages(t).map((p) => (
                 <div
                   key={p.name}
                   className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm"
