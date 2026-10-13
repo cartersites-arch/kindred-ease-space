@@ -11,6 +11,9 @@
   "vars": {
     "PUBLIC_APP_URL": "https://kindred-ease-space-test.pms-chat.workers.dev",
     "CLOUDFLARE_EDGE_WORKER": "kindred-ease-space-edge-test",
+    "SUPABASE_PROJECT_ID": "jwqldxatoyeobnoibdvl",
+    "SUPABASE_URL": "https://jwqldxatoyeobnoibdvl.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_5VNM0-qeYvSUjnPcshM0nA_7GkMj3Wt",
   },
   "observability": {
     "enabled": true,
