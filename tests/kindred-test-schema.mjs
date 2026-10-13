@@ -157,6 +157,11 @@ assert.equal(
   0,
 );
 assert.equal((await db.query("SELECT count(*)::int AS n FROM cron.job WHERE active")).rows[0].n, 0);
+const secretAcl = (await db.query(`SELECT
+ has_function_privilege('anon','public.tenant_get_integration_secret(uuid)','EXECUTE') AS anon,
+ has_function_privilege('authenticated','public.tenant_get_integration_secret(uuid)','EXECUTE') AS authenticated,
+ has_function_privilege('service_role','public.tenant_get_integration_secret(uuid)','EXECUTE') AS server`)).rows[0];
+assert.deepEqual(secretAcl, { anon: false, authenticated: false, server: true });
 const unprotected = (
   await db.query(`SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
  WHERE n.nspname='public' AND c.relkind IN ('r','p') AND NOT c.relrowsecurity

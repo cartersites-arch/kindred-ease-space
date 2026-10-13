@@ -29,7 +29,7 @@ python scripts/prepare-kindred-test-db.py --output /tmp/kindred-test-schema-chai
 node tests/kindred-test-schema.mjs /tmp/kindred-test-schema-chain.json
 ```
 
-Hosted installation used the extensions stage, archived schema, reconstructed foundation, first two active migrations, the pre-enum application batch, a separate enum migration, and the remaining application/hardening batch. Do not replay the chain on this initialized database. Normal production migrations still require an authoritative baseline and a separate review.
+Hosted installation used the extensions stage, archived schema, reconstructed foundation, first two active migrations, the pre-enum application batch, a separate enum migration, and the remaining application/hardening batch. A subsequent test-only migration revoked explicit client grants on the server-only integration-secret getter, correcting inherited default function privileges. Local and hosted ACL checks confirm only the service role can call that getter. Do not replay the chain on this initialized database. Normal production migrations still require an authoritative baseline and a separate review.
 
 Local integration checks exercise workspace creation, cross-workspace access, membership takeover, metadata role escalation, private profiles, RLS, and disabled jobs. The local vector, cron, network, queue, and Vault stand-ins do not establish those extensions' real behavior. Hosted DDL succeeded with the actual extensions, and hosted metadata confirms RLS and disabled schedules; end-to-end feature verification is still outstanding.
 

@@ -102,7 +102,7 @@ DO $$ DECLARE t record; BEGIN
           AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid=c.oid AND d.deptype='e')
  LOOP EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t.relname); END LOOP;
 END $$;
-''' + OFF + '\nNOTIFY pgrst, \'reload schema\';'
+''' + (ROOT / 'supabase/kindred-test/20261013194726_kindred_test_secret_rpc_grants.sql').read_text() + OFF + '\nNOTIFY pgrst, \'reload schema\';'
     chain.append({'name': 'kindred_test_access_hardening', 'query': hardening, 'source': 'test-only access checks'})
     for item in chain:
         if BLOCKED.search(item['query']):
