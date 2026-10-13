@@ -728,7 +728,9 @@ export const activateWorkspaceDomain = createServerFn({ method: "POST" })
     await assertWorkspaceOwner(data.workspaceId, context.userId);
     const { data: row } = await sb()
       .from("workspace_domains")
-      .select("id, hostname, verified, connection_type, route_prefix, status")
+      .select(
+        "id, hostname, verified, connection_type, route_prefix, status, cloudflare_hostname_id",
+      )
       .eq("workspace_id", data.workspaceId)
       .eq("id", data.id)
       .maybeSingle();
@@ -739,6 +741,38 @@ export const activateWorkspaceDomain = createServerFn({ method: "POST" })
 
     const prefix = (row.route_prefix || "/a/").replace(/\/$/, "");
     const checks: Array<{ name: string; ok: boolean; detail: string }> = [];
+    let sslStatus: string | undefined;
+
+    // Ownership proof and certificate issuance are separate. Read Cloudflare's
+    // source of truth, rather than leaving ssl_pending as a guessed status or
+    // treating another matching certificate's TLS handshake as completion.
+    // A customer-managed proxy terminates TLS itself and has no such CF gate.
+    if (row.connection_type !== "customer_proxy") {
+      try {
+        if (!row.cloudflare_hostname_id) throw new Error("custom hostname not provisioned");
+        const { getCustomHostnameStatus } = await import("@/lib/domain-provisioning.server");
+        const state = await getCustomHostnameStatus(row.cloudflare_hostname_id, row.hostname);
+        sslStatus = state.sslStatus;
+        checks.push({
+          name: "domain_certificate",
+          ok: state.hostnameStatus === "active" && state.sslStatus === "active",
+          detail:
+            state.hostnameStatus !== "active"
+              ? "Domain routing is still waiting for validation. Check the DNS record above and test again."
+              : state.sslStatus !== "active"
+                ? "Your domain is verified, but its certificate is not ready yet. Check your DNS record and test again."
+                : "Domain routing and security certificate are ready.",
+        });
+      } catch (error) {
+        console.error("[domains] certificate status check failed", row.hostname, error);
+        checks.push({
+          name: "domain_certificate",
+          ok: false,
+          detail:
+            "We couldn't check your domain's certificate. Retry setup or contact support if it keeps happening.",
+        });
+      }
+    }
 
     // Check 1: the Founders route answers through the customer's domain.
     try {
@@ -821,7 +855,20 @@ export const activateWorkspaceDomain = createServerFn({ method: "POST" })
     if (!allOk) {
       console.error("[domains] activation check failed", row.hostname, failDetail);
     }
-    await sb().from("workspace_domains").update(patch).eq("id", row.id);
+    const { data: updated, error: updateError } = await sb()
+      .from("workspace_domains")
+      .update({ ...patch, ...(sslStatus === undefined ? {} : { ssl_status: sslStatus }) })
+      .eq("id", row.id)
+      .eq("workspace_id", data.workspaceId)
+      .select("id");
+    if (updateError || !updated?.length) {
+      console.error("[domains] could not save activation result", updateError?.message);
+      return {
+        ok: false,
+        checks,
+        error: "We couldn't save your connection check. Refresh and try again.",
+      };
+    }
 
     return { ok: allOk, checks, status: allOk ? "active" : (patch.status as string) };
   });

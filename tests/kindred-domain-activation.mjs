@@ -1,0 +1,170 @@
+// Run the real activation handler and Cloudflare status reader against an
+// isolated database/network fixture. No customer DNS or Cloudflare writes.
+import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { build } from "esbuild";
+
+const folder = await mkdtemp(join(tmpdir(), "kindred-domain-test-"));
+const output = join(folder, "activation.mjs");
+let row,
+  pendingState,
+  apiFailure = false,
+  saveFailure = false,
+  cfReads = 0;
+globalThis.__kindredDomainDb = {
+  from(table) {
+    assert.equal(table, "workspace_domains");
+    let patch;
+    const q = {
+      select() {
+        return q;
+      },
+      eq() {
+        return q;
+      },
+      maybeSingle: async () => ({ data: { ...row }, error: null }),
+      update(value) {
+        patch = value;
+        return q;
+      },
+      then(resolve) {
+        if (saveFailure)
+          return Promise.resolve({ data: null, error: { message: "test save failed" } }).then(
+            resolve,
+          );
+        Object.assign(row, patch);
+        return Promise.resolve({ data: [{ id: row.id }], error: null }).then(resolve);
+      },
+    };
+    return q;
+  },
+};
+await build({
+  entryPoints: ["src/lib/admin-domains.functions.ts"],
+  outfile: output,
+  bundle: true,
+  platform: "node",
+  format: "esm",
+  logLevel: "silent",
+  plugins: [
+    {
+      name: "activation-fixtures",
+      setup(b) {
+        b.onResolve({ filter: /^@tanstack\/react-start$/ }, () => ({
+          path: "server",
+          namespace: "mock",
+        }));
+        b.onResolve(
+          {
+            filter:
+              /^(?:@\/integrations\/supabase\/(?:client\.server|auth-middleware)|\.\/admin-helpers\.functions)$/,
+          },
+          ({ path }) => ({ path, namespace: "mock" }),
+        );
+        b.onLoad({ filter: /.*/, namespace: "mock" }, ({ path }) => ({
+          loader: "js",
+          resolveDir: process.cwd(),
+          contents:
+            path === "server"
+              ? "export function createServerFn(){const q={middleware(){return q},inputValidator(){return q},handler(fn){return fn}};return q}"
+              : path.includes("client.server")
+                ? "export const supabaseAdmin=globalThis.__kindredDomainDb;"
+                : path.includes("auth-middleware")
+                  ? "export const requireSupabaseAuth=[];"
+                  : 'import {z} from "zod";export const workspaceIdSchema=z.string().uuid();export async function assertWorkspaceOwner(){};export async function assertWorkspaceMember(){};',
+        }));
+        b.onResolve({ filter: /^@\// }, ({ path }) => ({
+          path: resolve("src", path.slice(2)) + ".ts",
+        }));
+      },
+    },
+  ],
+});
+const savedFetch = globalThis.fetch;
+process.env.CLOUDFLARE_API_TOKEN = "isolated-fixture-token";
+process.env.CLOUDFLARE_ZONE_ID = "isolated-fixture-zone";
+globalThis.fetch = async (input) => {
+  const url = new URL(String(input));
+  if (url.hostname === "api.cloudflare.com") {
+    cfReads++;
+    return apiFailure
+      ? new Response('{"success":false}', { status: 503 })
+      : Response.json({ success: true, result: pendingState });
+  }
+  return new Response(
+    url.pathname.includes("founders-domain-test")
+      ? "founders-click-domain-test: OK"
+      : "Existing site",
+  );
+};
+try {
+  const { activateWorkspaceDomain } = await import(pathToFileURL(output).href);
+  const run = () =>
+    activateWorkspaceDomain({
+      data: { workspaceId: "fixture-workspace", id: row.id },
+      context: { userId: "fixture-owner" },
+    });
+  function reset() {
+    row = {
+      id: "fixture-domain",
+      hostname: "seo.example.invalid",
+      verified: true,
+      connection_type: "subdomain",
+      route_prefix: "/a/",
+      status: "ssl_pending",
+      cloudflare_hostname_id: "cf-fixture",
+    };
+    pendingState = {
+      hostname: row.hostname,
+      status: "active",
+      ssl: { status: "pending_validation" },
+    };
+    apiFailure = false;
+    saveFailure = false;
+  }
+  reset();
+  assert.equal(
+    (await run()).ok,
+    false,
+    "A working HTTPS route cannot hide pending certificate validation",
+  );
+  assert.equal(row.ssl_status, "pending_validation");
+  assert.equal(row.status, "ssl_pending");
+  pendingState.ssl.status = "active";
+  pendingState.status = "pending";
+  assert.equal(
+    (await run()).ok,
+    false,
+    "A ready certificate cannot hide pending hostname activation",
+  );
+  pendingState.status = "active";
+  assert.equal((await run()).ok, true);
+  assert.equal(row.status, "active");
+  reset();
+  apiFailure = true;
+  let result = await run();
+  assert.equal(result.ok, false);
+  assert.match(result.checks.find((c) => c.name === "domain_certificate").detail, /couldn't check/);
+  reset();
+  pendingState.hostname = "someone-else.example.invalid";
+  assert.equal((await run()).ok, false, "A mismatched hostname must not validate this domain");
+  reset();
+  pendingState.ssl.status = "active";
+  saveFailure = true;
+  assert.equal((await run()).ok, false, "Failed database saves must not report activation success");
+  reset();
+  row.connection_type = "customer_proxy";
+  const before = cfReads;
+  assert.equal((await run()).ok, true);
+  assert.equal(cfReads, before, "A customer-managed proxy uses its own HTTPS route check");
+  console.log(
+    "PASS: real certificate/hostname checks, lookup failures, mismatched domains, failed saves, and customer proxy mode. No external requests made.",
+  );
+} finally {
+  globalThis.fetch = savedFetch;
+  delete globalThis.__kindredDomainDb;
+  await rm(folder, { recursive: true, force: true });
+}
