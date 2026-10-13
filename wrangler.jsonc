@@ -1,7 +1,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "founders-click",
-  "compatibility_date": "2025-09-24",
+  "name": "kindred-ease-space-test",
+  "account_id": "0e91333c6994f692c3cb0e2d0e0efa02",
+  "compatibility_date": "2026-10-13",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [],
+  "vars": {
+    "PUBLIC_APP_URL": "https://kindred-ease-space-test.pms-chat.workers.dev",
+    "CLOUDFLARE_EDGE_WORKER": "kindred-ease-space-edge-test",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
 }
