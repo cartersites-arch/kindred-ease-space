@@ -22,7 +22,7 @@ Opened the company Hub through the actual Chat navigation. Verified cartersites 
 
 The app confirmed TS-2 created. Opened its status, reloaded, and verified its description, requester and photo-unavailable explanation persisted. Opened Manager Review and confirmed TS-2 appeared in Needs review (1) and Approvals (1), with a Manage TS-2 control.
 
-TS-2 remains Awaiting review and unassigned. Assignment, parts ordering, completion-photo upload, electronic signature and final inspection were not repeated in this check. No physical maintenance was certified. No signature was fabricated.
+At the initial signup check, TS-2 remained Awaiting review and unassigned. The follow-up below completes its virtual workflow. Parts ordering was not tested. No physical maintenance was certified. No signature was fabricated.
 
 Automatic Spanish description translation displayed unavailable, with the original text preserved. This is a remaining feature issue; it did not prevent saving, reopening or manager-queue routing. No AI answer, translation success or voice/video call is claimed.
 
@@ -34,4 +34,16 @@ Automatic Spanish description translation displayed unavailable, with the origin
 
 Local screenshot evidence is kept in the Teamstead artifact's capacity-test folder, not public homepage assets: new-front-signup-passkey-ready.jpg, new-front-signup-billing-required.jpg, front-flow-chat-persisted.jpg and front-flow-maintenance-manager-queue.jpg.
 
-These results verify new-company registration/passkey onboarding plus live Chat and maintenance-request smoke checks in the existing trial. They are not a full new-company subscribed end-to-end or final maintenance-certification test.
+These results verify new-company registration/passkey onboarding plus live Chat and maintenance workflow checks in the existing trial. They are not a full new-company subscribed end-to-end or physical maintenance-certification test.
+
+## TS-2 completion and separate-account manager sign-off follow-up
+
+Verified October 14, 2026 through the actual production UI. Approved and assigned TS-2 to Jerry Carter with explicit TEST ONLY instructions. Confirmed Jerry Carter's authenticated Hub identity, then accepted the assignment and started work. Uploaded a harmless 640 × 480 TEST ONLY graphic, explicitly stating that no physical repair was certified, through the real completion photo chooser. Added honest virtual-test completion notes. The user drew their own signature, entered their legal name and submitted the completion declaration directly; the agent did not sign or certify for them.
+
+The Hub confirmed completion notes, photo and signature saved and moved TS-2 to Awaiting inspection. The separate TEST Manager — Fictional account opened the inspection queue, saw TS-2, reviewed its completion notes and loaded the persisted completion image (640 × 480). Prepared notes expressly limiting the review to the software workflow and denying any physical inspection, repair, safety certification or equipment release. The form's physical-inspection wording was disclosed to the user before handoff. The user performed the manager signature/declaration and final close action themselves.
+
+The manager UI confirmed “Inspection signed and work order closed,” showed Completed and stated the record was no longer in the active queue. The saved job record retained completion notes and photo plus seven history events, including assignment accepted, work started, work finished (inspection pending), and inspection passed and verified with the TEST ONLY manager notes. Jerry Carter's separate tab was reloaded and also showed TS-2 Completed with its saved completion photo and notes.
+
+This verifies real saved completion and closure under different application accounts. Both accounts were operated by the same human for this dummy software test; it does not establish an independent physical inspection. Original-description translation still displayed unavailable with source text preserved. No application code, production schema, billing or security settings were changed in this follow-up.
+
+Additional private local screenshot evidence: ts2-completion-photo-ready.jpg, ts2-manager-review-ready.jpg and ts2-completed-manager-record.jpg. Signatures and private access links are not copied into repository evidence or public assets.
