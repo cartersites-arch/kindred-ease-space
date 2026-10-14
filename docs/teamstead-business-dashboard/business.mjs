@@ -1,9 +1,10 @@
+import {stripeBillingReader,revenueSummary} from './revenue.mjs';
 const json=(value,status=200)=>Response.json(value,{status,headers:{'cache-control':'private,no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'}});
 const validCompany=id=>typeof id==='string'&&/^(main|demo|pilot|c_[a-f0-9]{16})$/.test(id);
-export async function businessState(database,{chatProbe,hubFetch=fetch,billingMode='live'}={}){
+export async function businessState(database,{chatProbe,hubFetch=fetch,billingMode='live',billingReader=async()=>({price:{state:'unavailable'}})}={}){
  const companies=(await database.prepare('SELECT id,name,status,hub_ready,product_plan,billing_required,created_at FROM company_registry ORDER BY created_at').all()).results;
  const records=(await database.prepare('SELECT company_id,label,notes,version FROM teamstead_business_company').all()).results;
- const summaries=[];
+ const summaries=[],billingJobs=[];
  for(const co of companies){
   if(!validCompany(co.id))continue;
   const prefix=co.id==='main'?'':co.id+'_';let usage=null;
@@ -11,9 +12,13 @@ export async function businessState(database,{chatProbe,hubFetch=fetch,billingMo
    const summary=await database.prepare('SELECT (SELECT COUNT(*) FROM '+prefix+'people WHERE active=1) AS active_people,(SELECT COUNT(*) FROM '+prefix+'maintenance_links) AS connected_links,(SELECT used_bytes FROM '+prefix+'photo_budget WHERE id=1) AS used_bytes,(SELECT limit_bytes FROM '+prefix+'photo_budget WHERE id=1) AS limit_bytes').first();
    usage={activePeople:summary.active_people,connectedHubLinks:summary.connected_links,photoBytes:summary.used_bytes??null,photoLimitBytes:summary.limit_bytes??null};
   }catch{usage=null;}
-  const billing=await database.prepare('SELECT status,billing_interval,trial_ends_at,cancel_at_period_end,updated_at FROM company_billing WHERE company_id=? AND billing_mode=?').bind(co.id,billingMode).first();
-  summaries.push({...co,billing:billing?{...billing,mode:billingMode}:null,record:records.find(r=>r.company_id===co.id)||{label:'',notes:'',version:0},usage,chatPath:co.id==='main'?'/':'/?company='+encodeURIComponent(co.id),maintenancePath:'/?'+(co.id==='main'?'':'company='+encodeURIComponent(co.id)+'&')+'section=maintenance'});
+  const billing=await database.prepare('SELECT status,billing_interval,trial_ends_at,cancel_at_period_end,updated_at,subscription_id,customer_id,price_id FROM company_billing WHERE company_id=? AND billing_mode=?').bind(co.id,billingMode).first();
+  const priceSummary=null;
+  const safeBilling=billing?{status:billing.status,billing_interval:billing.billing_interval,trial_ends_at:billing.trial_ends_at,cancel_at_period_end:billing.cancel_at_period_end,updated_at:billing.updated_at,mode:billingMode,...priceSummary}:null;
+  if(billing)billingJobs.push({row:billing,id:co.id,billing:safeBilling});
+  summaries.push({...co,billing:safeBilling,record:records.find(r=>r.company_id===co.id)||{label:'',notes:'',version:0},usage,chatPath:co.id==='main'?'/':'/?company='+encodeURIComponent(co.id),maintenancePath:'/?'+(co.id==='main'?'':'company='+encodeURIComponent(co.id)+'&')+'section=maintenance'});
  }
+ for(let i=0;i<billingJobs.length;i+=4)await Promise.all(billingJobs.slice(i,i+4).map(async job=>Object.assign(job.billing,await billingReader(job.row,job.id))));
  const settings=await database.prepare('SELECT signup_enabled,company_limit FROM platform_settings WHERE id=1').first();
  const control=await database.prepare('SELECT version FROM teamstead_business_state WHERE id=1').first();
  const history=(await database.prepare('SELECT action,actor,company_id,created_at FROM teamstead_business_audit ORDER BY created_at DESC LIMIT 20').all()).results;
@@ -21,10 +26,10 @@ export async function businessState(database,{chatProbe,hubFetch=fetch,billingMo
  try{if(chatProbe){const result=await chatProbe();chat=result.ok?{state:'available',detail:'The Chat sign-in handler responded normally.'}:{state:'attention',detail:'The Chat sign-in handler did not respond normally.'};}}catch{chat={state:'attention',detail:'Chat sign-in check could not complete.'};}
  let hub={state:'not_checked',detail:'Customer Maintenance Hub entry has not been checked.'};
  try{const result=await hubFetch('https://pms-company-hub.pages.dev/',{method:'GET',redirect:'manual',signal:AbortSignal.timeout(5000)});hub=result.status===200?{state:'available',detail:'The customer Maintenance Hub entry returned HTTP 200.'}:{state:'attention',detail:'The customer Maintenance Hub entry returned HTTP '+result.status+'.'};if(result.body)await result.body.cancel();}catch{hub={state:'attention',detail:'Customer Maintenance Hub entry check could not complete.'};}
- return {version:control.version,settings,companies:summaries,customerCount:summaries.filter(c=>c.id!=='main').length,history,health:{checkedAt:Date.now(),chat,hub,scope:'Entry-point availability only. Customer sign-in, messages, and maintenance workflows are not tested by these checks.'}};
+ return {version:control.version,settings,companies:summaries,revenue:revenueSummary(summaries),customerCount:summaries.filter(c=>c.id!=='main').length,history,health:{checkedAt:Date.now(),chat,hub,scope:'Entry-point availability only. Customer sign-in, messages, and maintenance workflows are not tested by these checks.'}};
 }
 export async function businessApi(request,env,actor,options={}){
- if(request.method==='GET')return json(await businessState(env.DB,{...options,billingMode:env.STRIPE_MODE==='live'?'live':'test'}));
+ if(request.method==='GET')return json(await businessState(env.DB,{...options,billingMode:env.STRIPE_MODE==='live'?'live':'test',billingReader:options.billingReader||stripeBillingReader(env)}));
  if(request.method!=='POST')return json({error:'Method not allowed.'},405);
  if(request.headers.get('origin')!=='https://teamsteadcrew.com'||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json'||request.headers.get('sec-fetch-site')==='cross-site')return json({error:'Use the business owner dashboard.'},403);
  if(Number(request.headers.get('content-length')||0)>12000)return json({error:'This update is too large.'},413);
