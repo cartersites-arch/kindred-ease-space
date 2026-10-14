@@ -36,11 +36,17 @@ Fix commit `3d73da8c77489e64bd6569644d8060aaedd3e9f2` was pushed to this test br
 
 The provider suite passed 118 checks, customer-message suite 83, and metered AI-flow suite 109. TypeScript, the production build, the test-target Wrangler deployment dry run, dependency-registry guard, and diff checks passed. The existing model, draft-flow, template-contract, grounding, auth-landing, and tenant-template suites also passed during setup. Offline checks are not counted as any of the 18 real generations. An anonymous HTTP inventory read returned status 200 with zero rows.
 
+On resuming after the user reported readiness, a third real retry returned `insufficient_quota` / `credit_balance_exhausted`, request ID `req_1e9fcccda17446e7b32fd6c7953daf12`. It ran on newer Worker version `a4035074-41ec-4c38-8093-42b875025f12`, whose public source identity had reverted to `dev`. Both OpenAI organizations available in the browser (Paul Maurer Shows and Personal) still displayed $0.00. Across all three attempts, recorded usage and cost remain zero. Billing was inspected without modifying it. The installed secret's owning organization cannot be determined from the Worker secret metadata.
+
+Use `pwsh -File scripts/deploy-kindred-test.ps1` for future test deployments. It refuses other branches, remotes, dirty checkouts, Worker/account/project targets, and custom routes; stamps the committed SHA into the browser/server build; preserves runtime secrets; and checks the public version after deployment.
+
+The saved failed draft is visible to Yahoo's database identity and invisible to Gmail's. Both authenticated identities lack direct UPDATE privilege on `tenant_pages`; edits must use the membership-checked application handlers. These checks do not substitute for successful generated-page HTTP tests. The Supabase dashboard was not signed in, so current Auth URL settings and a newly issued confirmation redirect remain unverified.
+
 The required test matrix remains incomplete while the dedicated key's API balance is exhausted:
 
 | Account | Resource Article 1 / 2 / 3 | Category Page 1 / 2 / 3 | City Hub 1 / 2 / 3 |
 | --- | --- | --- | --- |
-| Yahoo | Failed twice (API balance) / pending / pending | pending / pending / pending | pending / pending / pending |
+| Yahoo | Failed three times (API balance) / pending / pending | pending / pending / pending | pending / pending / pending |
 | Gmail | pending / pending / pending | pending / pending / pending | pending / pending / pending |
 
 All 18 successful real generations, their saved editor views, generated-page isolation through direct links and authenticated API calls, and a newly issued confirmation-link redirect must still be verified. Existing confirmed-account timestamps do not prove the current redirect settings. No credits were purchased, plans upgraded, passwords changed, accounts deleted, live billing changed, or live Workers deployed.
