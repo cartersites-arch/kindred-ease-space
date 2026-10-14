@@ -1,0 +1,14 @@
+{
+  "project": "pms-company-hub",
+  "backend": "fhqmnlpgqslllzrovxbp",
+  "prefix": "TS-",
+  "oldEntry": "_expo/static/js/web/entry-424e77e2084620e12d48119fa8b2a55e.js",
+  "newEntry": "_expo/static/js/web/entry-9fdcb4d4e4a87474580c114891758505.js",
+  "beforeHash": "b1d7726cecbbcfa295b829934395230bee9cabe7b6be73e8a2b4a06ff75568ba",
+  "afterHash": "9fdcb4d4e4a87474580c114891758505c0b22d213f7fab0ab3f93fdd074a9273",
+  "changes": {
+    "workOrderPrefix": 23,
+    "assistant": 4
+  },
+  "safetyPolicyCitationsPreserved": true
+}

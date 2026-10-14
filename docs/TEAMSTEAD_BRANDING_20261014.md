@@ -1,0 +1,9 @@
+# Teamstead Hub display labels — October 14, 2026
+
+User reported that the new cartersites workspace showed PMS-1. The reviewed commercial Hub snapshot still contained inherited PMS display labels. Its backend remains the isolated Teamstead Sales Hub project fhqmnlpgqslllzrovxbp, separate from internal PMS.
+
+Changed 23 frontend work-order prefix occurrences to TS-, including lists, detail screens, completion, search text and generated report filenames; replaced PMS Assistant with Teamstead Assistant, product footer and abbreviated product label. Original safety-policy citations and internal module names retain their original meaning. Numeric work-order identity, records, authentication, backend destination and billing were unchanged.
+
+Verified current live HTML, company banner, return-link script and frontend bundle matched the reviewed baseline before preparing changes. JavaScript syntax check passed. Published only commercial Pages project pms-company-hub in Teamstead Software (account 0e91333c6994f692c3cb0e2d0e0efa02), deployment 0f087897-15aa-4471-9888-7cc335c5667f. Live HTML and new bundle hashes match the prepared release. No internal PMS service was modified. The legacy hosting project name/URL remains unchanged to preserve existing private links.
+
+Photo chooser check: actual file chooser opened; a harmless labeled 640x480 JPEG was selected through it; completion form showed PHOTO READY. A prior still-photo rejection was not reproducible with this valid JPEG. No photo-validation bypass or upload-code change was made. The user drew their own signature and submitted the dummy test completion. The app confirmed notes, photo and signature were saved. Reloaded status showed TS-1, Teamstead Assistant, stored completion notes and the photo decoded at 640x480. Final state is Awaiting inspection because a different authorized manager must inspect and sign off; no inspection signature was fabricated or self-approval restriction bypassed.
