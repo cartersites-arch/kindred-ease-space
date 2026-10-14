@@ -507,7 +507,7 @@ export const verifyWorkspaceDomain = createServerFn({ method: "POST" })
     const { data: row } = await sb()
       .from("workspace_domains")
       .select(
-        "id, hostname, verification_token, verified, verified_at, verification_method, cloudflare_hostname_id, cloudflare_route_id",
+        "id, hostname, verification_token, verified, verified_at, verification_method, connection_type, status, cloudflare_hostname_id, cloudflare_route_id",
       )
       .eq("workspace_id", data.workspaceId)
       .eq("id", data.id)

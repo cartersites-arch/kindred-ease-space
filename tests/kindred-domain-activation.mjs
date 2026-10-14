@@ -19,15 +19,19 @@ const workspace = { marketplace_domain: "", domain_verified_at: null };
 globalThis.__kindredDomainDb = {
   from(table) {
     assert.ok(["workspace_domains", "workspaces"].includes(table));
-    let patch;
+    let patch, selected;
     const q = {
-      select() {
+      select(columns) {
+        selected = columns?.split(",").map((column) => column.trim());
         return q;
       },
       eq() {
         return q;
       },
-      maybeSingle: async () => ({ data: { ...(table === "workspaces" ? workspace : row) }, error: null }),
+      maybeSingle: async () => {
+        const value = table === "workspaces" ? workspace : row;
+        return { data: selected ? Object.fromEntries(selected.map((key) => [key, value[key]])) : { ...value }, error: null };
+      },
       update(value) {
         patch = value;
         return q;
