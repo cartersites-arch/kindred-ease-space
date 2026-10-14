@@ -635,7 +635,18 @@ export const verifyWorkspaceDomain = createServerFn({ method: "POST" })
           .eq("id", row.id);
         return { ok: false as const, error: `Edge provisioning failed: ${msg}` };
       }
-
+    } else {
+      // Recover from an earlier managed-edge error without claiming activation.
+      // The owner still needs to pass the real HTTPS routing check below.
+      const { data: ready, error: readyError } = await sb()
+        .from("workspace_domains")
+        .update({ status: row.status === "active" ? "active" : "dns_configuration_required", last_error: null })
+        .eq("id", row.id)
+        .eq("workspace_id", data.workspaceId)
+        .eq("verified", true)
+        .select("id");
+      if (readyError) return { ok: false as const, error: readyError.message };
+      if (!Array.isArray(ready) || ready.length === 0) return { ok: false as const, error: DOMAIN_RECLAIMED_ERROR };
     }
 
     // Keep workspaces.marketplace_domain + domain_verified_at in sync so Settings

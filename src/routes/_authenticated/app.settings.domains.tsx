@@ -403,7 +403,9 @@ function DomainsPage() {
               {(d.status === "dns_configuration_required" || d.status === "ssl_pending") && (
                 <div className="space-y-3 rounded-md border bg-muted/30 p-3 text-sm">
                   <p className="font-medium">
-                    Ownership verified ✓ — now point your DNS at the Founders edge.
+                    {d.connection_type === "customer_proxy"
+                      ? "Ownership verified ✓ — test your domain's routing below."
+                      : "Ownership verified ✓ — now point your DNS at the Founders edge."}
                   </p>
                   {d.status === "ssl_pending" && (
                     <p className="text-muted-foreground">

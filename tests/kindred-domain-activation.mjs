@@ -175,6 +175,11 @@ try {
   assert.equal(row.verified, true);
   assert.equal(cfReads, readsBeforeProof);
   assert.equal(workspace.marketplace_domain, row.hostname);
+  row.status = "error";
+  row.last_error = "old managed-edge error";
+  assert.equal((await verify()).ok, true, "Customer proxy retry recovers an earlier managed-edge error");
+  assert.equal(row.status, "dns_configuration_required", "Ownership alone must not report an active domain");
+  assert.equal(row.last_error, null);
   reset();
   row.connection_type = "customer_proxy";
   row.verified = false;
