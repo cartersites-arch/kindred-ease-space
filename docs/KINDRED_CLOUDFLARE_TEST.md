@@ -32,11 +32,15 @@ The first real Yahoo Resource Article request failed before content generation. 
 
 The provider classifier previously treated every HTTP 429 as temporary congestion. The test-branch fix recognizes `insufficient_quota`/`credit_balance_exhausted` separately and uses a fixed message explaining the service balance or spending limit. Regression tests distinguish temporary rate limiting from billing exhaustion and keep provider prose and keys out of customer responses.
 
+Fix commit `3d73da8c77489e64bd6569644d8060aaedd3e9f2` was pushed to this test branch and deployed only to `kindred-ease-space-test`. Worker version `5da5d482-40e3-45e8-8d49-665bed76d38c` serves 100% of traffic, and `/api/public/version` reports that exact commit. Both runtime secrets remain present. A second real request, retrying the same saved Yahoo draft, again failed because API balance is exhausted. The deployed UI and new usage-log row now report the correct quota-exhaustion message/code. Across both calls the database records zero tokens, zero cost, and the full 20-unit Yahoo allowance. No successful generated body exists.
+
+The provider suite passed 118 checks, customer-message suite 83, and metered AI-flow suite 109. TypeScript, the production build, the test-target Wrangler deployment dry run, dependency-registry guard, and diff checks passed. The existing model, draft-flow, template-contract, grounding, auth-landing, and tenant-template suites also passed during setup. Offline checks are not counted as any of the 18 real generations. An anonymous HTTP inventory read returned status 200 with zero rows.
+
 The required test matrix remains incomplete while the dedicated key's API balance is exhausted:
 
 | Account | Resource Article 1 / 2 / 3 | Category Page 1 / 2 / 3 | City Hub 1 / 2 / 3 |
 | --- | --- | --- | --- |
-| Yahoo | Failed (API balance) / pending / pending | pending / pending / pending | pending / pending / pending |
+| Yahoo | Failed twice (API balance) / pending / pending | pending / pending / pending | pending / pending / pending |
 | Gmail | pending / pending / pending | pending / pending / pending | pending / pending / pending |
 
 All 18 successful real generations, their saved editor views, generated-page isolation through direct links and authenticated API calls, and a newly issued confirmation-link redirect must still be verified. Existing confirmed-account timestamps do not prove the current redirect settings. No credits were purchased, plans upgraded, passwords changed, accounts deleted, live billing changed, or live Workers deployed.
