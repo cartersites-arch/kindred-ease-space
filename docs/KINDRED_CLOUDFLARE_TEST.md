@@ -24,6 +24,12 @@ Resend reports email `01a138fb-4b80-765d-98eb-8731f36489ef`, subject **Confirm y
 
 ## Connected website subdomain
 
+### October 14 software catalog drafts
+
+At the user's request, the @me.com workspace now has two private software overview drafts: `team-software` (`01195ca9-b9a0-4d94-b9f0-60284e1c2bd1`) and `teamstead-crew` (`94a89102-7447-4774-90eb-5a390f5da841`). Both use the Resource Article renderer: the inventory category template requires three listings, while only one product was verified. This is an initial catalog using existing templates, not a new software storefront or a Sharetribe connection.
+
+The public Teamstead Crew entry page was inspected for its stated conversations, projects, maintenance, passkey sign-in, and owner-arranged invitations/recovery. One manually entered product record (`432990b8-318f-4b26-ab5d-34e1f65167a3`) links to `https://teamsteadcrew.com/`, has no price, and explicitly records that it is not Sharetribe inventory. No live Teamstead data was changed. Both real Standard generations succeeded (catalog: 939 input / 667 output tokens, $0.000314; product: 906 / 608, $0.000289). Generated references to rental fixtures and unsupported claims were removed in the editor. Each saved draft was scoped to the Team Software category so its listing preview contains only Teamstead Crew. Both bodies exceed 1,000 characters and remain drafts; neither was published. The existing public dummy pages remain unchanged.
+
 ### Additional @me.com city and category drafts
 
 After connecting the domain, the user requested a city hub and category page in the `jarhead4zoe@me.com` workspace. It had no listings, so three clearly labeled fictional Garden Tools listings were added in fictional Test Cedar City, with USD daily prices of $10, $20, and $30 and placeholder `example.com` URLs. No real booking or service is offered. Two additional real Standard (`gpt-5-nano`) generations succeeded, saved, and reopened after full reload with the correct three listings:
