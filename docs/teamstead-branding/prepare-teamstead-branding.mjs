@@ -12,6 +12,8 @@ for(const file of ['index.html','company-brand.js','hub-chat-return.js',entry]){
 }
 await mkdir(output,{recursive:true});
 await cp(source,output,{recursive:true});
+const returnLink=await readFile(output+'/hub-chat-return.js','utf8');
+await writeFile(output+'/hub-chat-return.js',returnLink.replaceAll('https://teamstead-crew.pages.dev/','https://teamsteadcrew.com/'));
 const before=await readFile(output+'/'+entry,'utf8');
 if(!before.includes('fhqmnlpgqslllzrovxbp')||/vakgonahbkpapgwnfuqe|pms-maintenance-hub\.pages\.dev|project-room-ekn/.test(before))throw Error('Incorrect backend target');
 let after=before.replaceAll('PMS-','TS-').replaceAll('PMS Assistant','Teamstead Assistant').replaceAll('PMS MAINTENANCE HUB','TEAMSTEAD MAINTENANCE HUB').replaceAll('PMS TEST HUB','TEAMSTEAD TEST HUB').replaceAll('PMS Hub','Teamstead Hub').replaceAll('PMS number','work-order number').replaceAll('n\\xfamero PMS','n\\xfamero de orden').replaceAll('children:"PMS"','children:"Teamstead"').replaceAll('%PMS local report','%Teamstead local report');
