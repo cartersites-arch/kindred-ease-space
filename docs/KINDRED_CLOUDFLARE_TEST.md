@@ -24,6 +24,8 @@ Resend reports email `01a138fb-4b80-765d-98eb-8731f36489ef`, subject **Confirm y
 
 ## Connected website subdomain
 
+October 14 cleanup: at the owner's request, `test-cedar-city`, `test-garden-tools`, and the superseded `team-software` catalog were unpublished as recoverable drafts. Their public URLs now return HTTP 404. The @me.com workspace name and public brand are **Teamstead Software**. Its sitemap returns HTTP 200 with exactly four software URLs: `teamstead-crew`, `teamstead-software`, `teamstead-chat`, and `maintenance-hub`. A separate welcome-screen redesign for the real Teamstead Crew Pages site was prepared outside this repository; deployment awaits Pages login permission and is not part of the isolated Worker deployment.
+
 ### October 14 software catalog drafts
 
 The user later published `team-software` and `teamstead-crew`; both public URLs and the four-entry sitemap returned HTTP 200. After the user clarified that Chat and Maintenance Hub are both inside Teamstead Crew, three additional manually authored article drafts were saved in the same @me.com workspace: `teamstead-chat` (`484992a0-d1f5-4682-9338-09f955e6baa4`), `maintenance-hub` (`d499347d-0622-4d71-bdf0-cb593477fdba`), and the revised catalog `teamstead-software` (`a606384a-7aa0-4656-b40a-51ab33c3ddff`). All link to the existing Teamstead Crew address and describe the two areas as parts of one app. Detailed features remain pending owner confirmation. These are editorial drafts, with null generation metadata and no new API calls; they are not counted as real generation tests. They use the existing resource template and Team Software listing filter. The revised catalog was saved separately to preserve the currently published catalog while the owner reviews the new wording.
