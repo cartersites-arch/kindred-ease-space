@@ -24,7 +24,7 @@ Resend reports email `01a138fb-4b80-765d-98eb-8731f36489ef`, subject **Confirm y
 
 ## Connected website subdomain
 
-October 14 cleanup: at the owner's request, `test-cedar-city`, `test-garden-tools`, and the superseded `team-software` catalog were unpublished as recoverable drafts. Their public URLs now return HTTP 404. The @me.com workspace name and public brand are **Teamstead Software**. Its sitemap returns HTTP 200 with exactly four software URLs: `teamstead-crew`, `teamstead-software`, `teamstead-chat`, and `maintenance-hub`. A separate welcome-screen redesign for the real Teamstead Crew Pages site was prepared outside this repository; deployment awaits Pages login permission and is not part of the isolated Worker deployment.
+October 14 cleanup: at the owner's request, `test-cedar-city`, `test-garden-tools`, and the superseded `team-software` catalog were unpublished as recoverable drafts. Their public URLs now return HTTP 404. The @me.com workspace name and public brand are **Teamstead Software**. Its sitemap returns HTTP 200 with exactly four software URLs: `teamstead-crew`, `teamstead-software`, `teamstead-chat`, and `maintenance-hub`. A separate welcome-screen redesign for the real Teamstead Crew Pages site was prepared outside this repository. After explicit owner approval of Pages access and publishing, it deployed only to Pages project `teamstead-crew` as `faed2c1b-4909-46b1-aac5-98fab4e97b67`. The welcome, Maintenance/Pilot routes, and signed-out auth endpoints pass real HTTP checks; the original backend upload, D1, and R2 bindings were preserved. No actual human passkey sign-in is claimed as retested. This separate site update is not part of the isolated Kindred Worker deployment.
 
 ### October 14 software catalog drafts
 
