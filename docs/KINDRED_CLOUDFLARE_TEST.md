@@ -56,6 +56,20 @@ The Supabase Auth dashboard now verifies Site URL `https://kindred-ease-space-te
 
 The user's new test signup on October 13 at 10:31–10:33 PM Pacific failed with HTTP 429, `over_email_send_rate_limit`. The project uses Supabase's built-in email sender, whose shared project limit is two messages per hour and cannot be raised without custom SMTP or a Send Email hook. Successful recovery sends were recorded at 9:59:36 PM and 10:06:06 PM Pacific. This is an email-budget blocker, not evidence of an invalid address or a completed confirmation. No new account was retained from these failed sends. The UI now maps this error code to a fixed message explaining the hourly email limit and later retry. No rate limits, SMTP credentials, existing accounts, or billing were changed.
 
+### Dedicated test email sender setup
+
+The user created a free Resend account and explicitly selected `auth-test.teamsteadcrew.com` for the isolated test sender. Resend domain `c25cdbe7-94ac-43c7-aa12-7507e75a7233` is **verified**. Three previously unused names were added in Teamstead Software's `teamsteadcrew.com` zone (`da9c5a42f965d0dc32dcce9e197a28d6`), all DNS-only with automatic TTL:
+
+| Type | Full record name | Purpose / target | Cloudflare record ID |
+| --- | --- | --- | --- |
+| TXT | `resend._domainkey.auth-test.teamsteadcrew.com` | Resend-generated public DKIM key | `18536155dda7c892999b80be35c9426f` |
+| CNAME | `rsend.auth-test.teamsteadcrew.com` | `rsend.forge.rmta.net` | `687c6677c42a8c74f5ebd117328bd6ef` |
+| CNAME | `send.auth-test.teamsteadcrew.com` | `send.forge.rmta.net` | `7076909da776812bfd46f3b2467fe292` |
+
+Public DNS queries resolve the signing record and sending alias, and Resend reports the domain verified. No existing DNS record, apex MX/SPF/DMARC record, website route, or other application's sender was changed. Receiving remains disabled. These additions extend the test scope only to the explicitly chosen email subdomain.
+
+The isolated project's SMTP form is prepared with sender `no-reply@auth-test.teamsteadcrew.com`, sender name `Kindred Ease Isolated Test`, host `smtp.resend.com`, port `465`, username `resend`, and minimum per-user interval 60 seconds. A Resend key form named `Kindred Ease Isolated Test SMTP` is prepared with **Sending access**, limited to this domain. The user must create the key and paste it directly into the isolated Supabase SMTP password field and save. The secret has not been created, read, printed, committed, or installed by the agent. SMTP activation and a newly delivered signup-confirmation link remain unverified until that secure handoff is complete.
+
 ## October 13 end-to-end verification history
 
 The separate local checkout `isolated-test` has the Carter remote and branch shown above. The suggested parent checkout points to Derek's repository on `test/ai-page-generation` and has unrelated uncommitted edits; do not use it for this test.
