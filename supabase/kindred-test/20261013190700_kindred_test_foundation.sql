@@ -30,6 +30,12 @@ CREATE TABLE public.workspaces (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Archived customer rows are excluded from this test reconstruction. Restore
+-- the workspace key required by current legacy-page reads and sitemap queries.
+ALTER TABLE public.content_pages
+  ADD COLUMN workspace_id uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE;
+CREATE INDEX content_pages_workspace_id_id_idx ON public.content_pages(workspace_id, id);
+
 CREATE TABLE public.workspace_members (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,

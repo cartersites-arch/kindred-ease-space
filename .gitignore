@@ -38,3 +38,4 @@ dist-ssr
 .claude/
 tests/_build/
 .test-tmp/
+supabase/.temp/

@@ -10,7 +10,7 @@ This branch prepares `cartersites-arch/kindred-ease-space` for an isolated test 
 | Worker URL after deployment | `https://kindred-ease-space-test.pms-chat.workers.dev` |
 | Supabase project | `jwqldxatoyeobnoibdvl` |
 | Supabase API | `https://jwqldxatoyeobnoibdvl.supabase.co` |
-| Custom routes | Empty |
+| Custom routes | Only `seo-test.teamsteadcrew.com` (custom domain) |
 
 The test app is deployed and its public URL responds. See the verification update below for current evidence; the earlier setup sections retain their historical context.
 
@@ -21,6 +21,18 @@ All requested tests passed on October 13, 2026: **18/18 real Standard-model gene
 The two generation accounts remain `cartersites@yahoo.com` and `jarhead4zoe@gmail.com`. The additional signup-confirmation account, `jarhead4zoe@me.com` (`c43b4bac-bfa1-42d0-b946-11475e979b2a`), was created without deleting or changing those accounts. Signup returned HTTP 200 at **10:55:55 PM Pacific**, confirmation returned HTTP 303 with `user_signedup` at **10:59:07 PM Pacific**, and the browser landed at `https://kindred-ease-space-test.pms-chat.workers.dev/app#`, signed in as the new account. Its own owner workspace is `ade88511-1e19-47ba-919d-ce5715af82ae`, showing zero listings and zero pages, distinct from both generation workspaces.
 
 Resend reports email `01a138fb-4b80-765d-98eb-8731f36489ef`, subject **Confirm your email address**, recipient `jarhead4zoe@me.com`, as **delivered**. The new account's confirmation and sign-in timestamps independently match the verification request. The test sender is saved only in the isolated Supabase project, with a verified dedicated `auth-test.teamsteadcrew.com` domain. No secret or confirmation token was read, printed, or committed. No remaining blocker exists for the requested generation, isolation, and email-confirmation tests. This does not certify unrelated publishing, live billing, real inventory sync, or inbox placement.
+
+## Connected website subdomain
+
+The user subsequently selected **`seo-test.teamsteadcrew.com`** and explicitly assigned its public pages to **`jarhead4zoe@me.com`**, workspace `ade88511-1e19-47ba-919d-ce5715af82ae`. The old DNS-only CNAME to `proxy.founders.click` was replaced with a Cloudflare custom domain attached directly to **`kindred-ease-space-test`**, custom-domain ID `2726c67b50b6c0783bc288f9848564ffd6ac9899`, certificate ID `5285d0c4-079b-4866-9574-7e514aad624d`. The exact hostname is now in the test Wrangler configuration and deployment guard; no wildcard route is authorized. The ownership TXT record `_founders-click.seo-test.teamsteadcrew.com` was added with record ID `beba0b8c2383cf1b7c89eacf48fcfe25`.
+
+The workspace connection uses owner-managed routing (`customer_proxy`) because Cloudflare already directs the hostname to the isolated app. Verification now reads the connection type, still proves ownership, and does not attempt shared Founders edge provisioning for that mode. A retry can clear an earlier managed-edge error but does not report activation until the HTTPS route check succeeds. Regression fixtures return only selected database columns, require ownership proof, preserve shared-edge credential requirements, and exercise retry recovery. The `global_fetch_strictly_public` compatibility flag is required for a Worker to test its own custom hostname through public routing; without it, Cloudflare returned HTTP 522 internally while external requests succeeded.
+
+The domain row `a1a65323-d3dd-43b1-8fa0-6dcc0a2f9f48` is **verified, active, health ok**, activated October 13 at 11:33:21 PM Pacific. The real HTTPS probe returns HTTP 200, `host: seo-test.teamsteadcrew.com`, and `tenant: resolved`. Its `/a/sitemap.xml` now returns valid XML with no URLs, correctly reflecting this new workspace's zero published pages. The main `https://teamsteadcrew.com` still returns HTTP 200; only the selected test subdomain and its ownership TXT were changed.
+
+The first real sitemap request exposed a missing `content_pages.workspace_id` in the reconstructed test database. The table had zero rows. Test-only migration `supabase/kindred-test/20261014063731_kindred_test_legacy_content_workspace.sql` adds the required non-null workspace foreign key and index, without assigning global rows, changing grants, or disabling RLS. The test foundation includes the same contract for future reconstruction. Hosted metadata verifies the column, RLS, and zero legacy rows; the real custom-domain sitemap passes after the repair.
+
+Supabase Site URL is now `https://seo-test.teamsteadcrew.com/`. Exact allowed redirects include its `/app` and `/reset-password` plus the existing Workers test `/app`. All settings are confined to project `jwqldxatoyeobnoibdvl`. Domain-handler regression checks, 26 domain-status checks, TypeScript, production builds, and the guarded deployments passed. Source commit `f5a260d9e0ce55fa2e3ab0835127c3208db5493a` deployed as Worker version `b136a94c-2b8a-4b9a-a2d7-be773b5b96ed` before the test-only schema repair and this report update.
 
 ## October 13 funded generation results
 
@@ -102,7 +114,7 @@ The provider suite passed 118 checks, customer-message suite 83, and metered AI-
 
 On resuming after the user reported readiness, a third real retry returned `insufficient_quota` / `credit_balance_exhausted`, request ID `req_1e9fcccda17446e7b32fd6c7953daf12`. It ran on newer Worker version `a4035074-41ec-4c38-8093-42b875025f12`, whose public source identity had reverted to `dev`. Both OpenAI organizations available in the browser (Paul Maurer Shows and Personal) still displayed $0.00. Across all three attempts, recorded usage and cost remain zero. Billing was inspected without modifying it. The installed secret's owning organization cannot be determined from the Worker secret metadata.
 
-Use `pwsh -File scripts/deploy-kindred-test.ps1` for future test deployments. It refuses other branches, remotes, dirty checkouts, Worker/account/project targets, and custom routes; stamps the committed SHA into the browser/server build; preserves runtime secrets; and checks the public version after deployment.
+Use `pwsh -File scripts/deploy-kindred-test.ps1` for future test deployments. It refuses other branches, remotes, dirty checkouts, Worker/account/project targets, and unexpected routes; permits only the explicitly authorized `seo-test.teamsteadcrew.com` custom domain; stamps the committed SHA into the browser/server build; preserves runtime secrets; and checks the public version after deployment.
 
 The saved failed draft is visible to Yahoo's database identity and invisible to Gmail's. Both authenticated identities lack direct UPDATE privilege on `tenant_pages`; edits must use the membership-checked application handlers. These checks do not substitute for successful generated-page HTTP tests. The Supabase dashboard was not signed in, so current Auth URL settings and a newly issued confirmation redirect remain unverified.
 
