@@ -12,7 +12,34 @@ This branch prepares `cartersites-arch/kindred-ease-space` for an isolated test 
 | Supabase API | `https://jwqldxatoyeobnoibdvl.supabase.co` |
 | Custom routes | Empty |
 
-The Worker resource exists, but no application version is deployed and its public subdomain is disabled. These URLs do not establish a working app.
+The test app is deployed and its public URL responds. See the verification update below for current evidence; the earlier setup sections retain their historical context.
+
+## October 13 end-to-end verification update
+
+The separate local checkout `isolated-test` has the Carter remote and branch shown above. The suggested parent checkout points to Derek's repository on `test/ai-page-generation` and has unrelated uncommitted edits; do not use it for this test.
+
+The running Worker version was `6783df36-bae7-483f-965a-65a1fab6efb4`, serving 100% of traffic. Its runtime bindings include `OPENAI_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY`; secret values were not read. Runtime `SUPABASE_URL` and the deployed public browser bundle both target `jwqldxatoyeobnoibdvl`. The public version endpoint returned `sha: dev`, so it does not establish the deployed source commit. Local builds must set `BUILD_SHA` when deploying this branch manually.
+
+The isolated Auth accounts are `cartersites@yahoo.com` and `jarhead4zoe@gmail.com`; both have confirmed email addresses. Their separate workspace IDs are `0d787190-6320-49f5-b04e-25bd548cb03b` and `d588a61c-a6cc-45f0-89ca-0135ab6bc9ad`. Each has an active trial ending October 27 and a 25-page base limit. The default AI allowance is 20 generations per workspace and is allocated on first use. Generation is enabled, with a 50-page daily cap.
+
+The actual builder templates are Resource Article (`resource_article`), Category Page (`category_page`, the inventory flow), and City Hub (`city_hub`). Standard uses `gpt-5-nano`, the Responses API, minimal reasoning, `store: false`, 6,000 maximum output tokens and a 120-second timeout. Premium (`gpt-5-mini`) was not selected.
+
+There was no inventory. `scripts/kindred-isolated-e2e-fixtures.sql` added nine explicitly fictional listings per workspace: three listings for each of three categories/cities, priced at $10–$30 USD per day. It is idempotent and must run only on this isolated project. No Sharetribe integration or real inventory sync was fabricated.
+
+Hosted database checks using the `authenticated` role and each account's identity showed nine own listings, zero foreign listings, one visible workspace, one own membership, zero foreign memberships, and zero foreign listing updates. The attempted updates were rolled back. These are database isolation checks, not evidence for authenticated HTTP requests or generated-page direct links.
+
+The first real Yahoo Resource Article request failed before content generation. OpenAI returned HTTP 429, type `insufficient_quota`, code `credit_balance_exhausted`, request ID `req_76e3444433394deb811d027cad2bd3ca`. The Worker log explicitly reported no API credits remaining. The saved draft is `3af9b88c-5c47-4ab0-96e8-c5f81e0209e5`, slug `yahoo-test-resource-1`, in the Yahoo workspace. It has no generated body. The spend reservation settled at zero cost and refunded its allowance unit; the usage log records zero tokens and zero cost. This is not a successful generation or proof that API billing is available.
+
+The provider classifier previously treated every HTTP 429 as temporary congestion. The test-branch fix recognizes `insufficient_quota`/`credit_balance_exhausted` separately and uses a fixed message explaining the service balance or spending limit. Regression tests distinguish temporary rate limiting from billing exhaustion and keep provider prose and keys out of customer responses.
+
+The required test matrix remains incomplete while the dedicated key's API balance is exhausted:
+
+| Account | Resource Article 1 / 2 / 3 | Category Page 1 / 2 / 3 | City Hub 1 / 2 / 3 |
+| --- | --- | --- | --- |
+| Yahoo | Failed (API balance) / pending / pending | pending / pending / pending | pending / pending / pending |
+| Gmail | pending / pending / pending | pending / pending / pending | pending / pending / pending |
+
+All 18 successful real generations, their saved editor views, generated-page isolation through direct links and authenticated API calls, and a newly issued confirmation-link redirect must still be verified. Existing confirmed-account timestamps do not prove the current redirect settings. No credits were purchased, plans upgraded, passwords changed, accounts deleted, live billing changed, or live Workers deployed.
 
 ## Reconstructed test database
 
