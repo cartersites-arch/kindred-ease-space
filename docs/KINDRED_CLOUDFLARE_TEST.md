@@ -24,6 +24,17 @@ Resend reports email `01a138fb-4b80-765d-98eb-8731f36489ef`, subject **Confirm y
 
 ## Connected website subdomain
 
+### Additional @me.com city and category drafts
+
+After connecting the domain, the user requested a city hub and category page in the `jarhead4zoe@me.com` workspace. It had no listings, so three clearly labeled fictional Garden Tools listings were added in fictional Test Cedar City, with USD daily prices of $10, $20, and $30 and placeholder `example.com` URLs. No real booking or service is offered. Two additional real Standard (`gpt-5-nano`) generations succeeded, saved, and reopened after full reload with the correct three listings:
+
+| Type | Title / slug | Page ID | Input / output tokens | Recorded USD cost |
+| --- | --- | --- | --- | --- |
+| Category | Test Garden Tools — Category Page / `test-garden-tools` | `6054f8c1-a2c2-4be2-b2c0-f40d21f3a0d8` | 819 / 455 | 0.000223 |
+| City hub | Test Cedar City — City Hub / `test-cedar-city` | `ec7e0aaa-5cb5-4b8e-9c3b-9114d64812fc` | 830 / 442 | 0.000219 |
+
+Both belong to workspace `ade88511-1e19-47ba-919d-ce5715af82ae`, have generation state `ready`, and remain **private drafts**. Neither was published. These two follow-up generations cost **$0.000442** and are separate from the original 18-run test matrix. The custom domain's public sitemap still has zero published URLs.
+
 The user subsequently selected **`seo-test.teamsteadcrew.com`** and explicitly assigned its public pages to **`jarhead4zoe@me.com`**, workspace `ade88511-1e19-47ba-919d-ce5715af82ae`. The old DNS-only CNAME to `proxy.founders.click` was replaced with a Cloudflare custom domain attached directly to **`kindred-ease-space-test`**, custom-domain ID `2726c67b50b6c0783bc288f9848564ffd6ac9899`, certificate ID `5285d0c4-079b-4866-9574-7e514aad624d`. The exact hostname is now in the test Wrangler configuration and deployment guard; no wildcard route is authorized. The ownership TXT record `_founders-click.seo-test.teamsteadcrew.com` was added with record ID `beba0b8c2383cf1b7c89eacf48fcfe25`.
 
 The workspace connection uses owner-managed routing (`customer_proxy`) because Cloudflare already directs the hostname to the isolated app. Verification now reads the connection type, still proves ownership, and does not attempt shared Founders edge provisioning for that mode. A retry can clear an earlier managed-edge error but does not report activation until the HTTPS route check succeeds. Regression fixtures return only selected database columns, require ownership proof, preserve shared-edge credential requirements, and exercise retry recovery. The `global_fetch_strictly_public` compatibility flag is required for a Worker to test its own custom hostname through public routing; without it, Cloudflare returned HTTP 522 internally while external requests succeeded.
