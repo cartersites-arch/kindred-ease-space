@@ -54,6 +54,8 @@ Probe commit `7b49034a24b9793015d06bc464fe25b9528fb55c` passed TypeScript and th
 
 The Supabase Auth dashboard now verifies Site URL `https://kindred-ease-space-test.pms-chat.workers.dev/` and the sole allowed redirect `https://kindred-ease-space-test.pms-chat.workers.dev/app`. Both existing users are already confirmed; their dashboard only offers recovery and magic links, which do not prove a new signup-confirmation flow. A newly issued email-confirmation redirect remains outstanding.
 
+The user's new test signup on October 13 at 10:31–10:33 PM Pacific failed with HTTP 429, `over_email_send_rate_limit`. The project uses Supabase's built-in email sender, whose shared project limit is two messages per hour and cannot be raised without custom SMTP or a Send Email hook. Successful recovery sends were recorded at 9:59:36 PM and 10:06:06 PM Pacific. This is an email-budget blocker, not evidence of an invalid address or a completed confirmation. No new account was retained from these failed sends. The UI now maps this error code to a fixed message explaining the hourly email limit and later retry. No rate limits, SMTP credentials, existing accounts, or billing were changed.
+
 ## October 13 end-to-end verification history
 
 The separate local checkout `isolated-test` has the Carter remote and branch shown above. The suggested parent checkout points to Derek's repository on `test/ai-page-generation` and has unrelated uncommitted edits; do not use it for this test.
