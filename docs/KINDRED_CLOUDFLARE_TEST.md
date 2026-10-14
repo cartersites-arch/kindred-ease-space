@@ -32,7 +32,27 @@ After the user added $10 to Paul Maurer Shows, the installed dedicated test key 
 
 Total recorded cost for these nine successful generations is **$0.002822**. This is the application's recorded provider usage cost, not a retrieved billing invoice. No pages were published. A hosted authenticated-role check confirmed Gmail can read zero Yahoo pages and has no direct UPDATE privilege on `tenant_pages`.
 
-The other nine generations await secure sign-in as `jarhead4zoe@gmail.com`. Both directions of direct-link and authenticated HTTP read/edit isolation, and the newly issued email-confirmation redirect, remain outstanding. Current completion is **9/18**, not 18/18.
+After secure sign-in as `jarhead4zoe@gmail.com`, all nine Gmail runs also generated real content, saved in workspace `d588a61c-a6cc-45f0-89ca-0135ab6bc9ad`, opened in the correct editor, and reopened after reload. All have generation state `ready` and nonempty bodies.
+
+| Type / run | Saved page ID | Input / output tokens | Recorded cost (USD) |
+| --- | --- | --- | --- |
+| Resource 1 | `45a27b2a-e7b0-4614-9424-ca4bbcd31a9d` | 1008 / 644 | 0.000308 |
+| Resource 2 | `0f99bb46-56d9-4c95-a959-ea860ab1a60d` | 998 / 842 | 0.000387 |
+| Resource 3 | `30dc594b-995b-41f6-99a1-459c08c83402` | 1001 / 741 | 0.000347 |
+| Category 1 (Camping Gear) | `575fd200-d9c8-4238-830d-9de65ab409e0` | 806 / 456 | 0.000223 |
+| Category 2 (Garden Tools) | `0abc9f7d-17e5-4bf8-946c-a87efb68afd9` | 806 / 436 | 0.000215 |
+| Category 3 (Party Supplies) | `678d7daa-0def-47cb-acb4-28d372978176` | 803 / 488 | 0.000236 |
+| City 1 (Test Pine City) | `7b7d2a13-3347-43c6-91d7-b4bc54203206` | 817 / 601 | 0.000282 |
+| City 2 (Test Cedar City) | `7f1bf0e5-7b59-41c8-b420-3b2d0bba49a5` | 817 / 533 | 0.000255 |
+| City 3 (Test Maple City) | `0894f9d6-e179-4911-8e9c-24c12c9934f9` | 816 / 393 | 0.000198 |
+
+Gmail's recorded cost is **$0.002451**; the **18/18 successful generations** total **$0.005273**. The isolated database contains nine ready drafts per workspace. Failed quota calls are excluded from this success count.
+
+The test-only `/app/isolated-test` route calls the existing authenticated page handlers with fixed dummy target IDs; it adds no server API or authorization bypass. It is unavailable when the browser Supabase URL or current workspace differs from the isolated test setup. Gmail's own-page request succeeded. Both its foreign-workspace read and edit were denied; Worker logs confirm `Forbidden — not a member of this workspace` before content access/write. A foreign page ID paired with its own workspace was denied as nonexistent. Opening Yahoo's direct editor link also showed only the nonexistent-page error. Yahoo-to-Gmail browser/API checks remain pending secure Yahoo sign-in.
+
+Probe commit `7b49034a24b9793015d06bc464fe25b9528fb55c` passed TypeScript and the production build, and deployed only to Worker version `774f17c8-6046-4726-be08-30ad450bceea`. The guarded deployment verified that exact public SHA.
+
+The Supabase Auth dashboard now verifies Site URL `https://kindred-ease-space-test.pms-chat.workers.dev/` and the sole allowed redirect `https://kindred-ease-space-test.pms-chat.workers.dev/app`. Both existing users are already confirmed; their dashboard only offers recovery and magic links, which do not prove a new signup-confirmation flow. A newly issued email-confirmation redirect remains outstanding.
 
 ## October 13 end-to-end verification history
 
