@@ -47,6 +47,7 @@ import { Route as AuthenticatedAppSeoCoachRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppPagesRouteImport } from './routes/_authenticated/app.pages'
 import { Route as AuthenticatedAppOpportunitiesRouteImport } from './routes/_authenticated/app.opportunities'
 import { Route as AuthenticatedAppOnboardingRouteImport } from './routes/_authenticated/app.onboarding'
+import { Route as AuthenticatedAppIsolatedTestRouteImport } from './routes/_authenticated/app.isolated-test'
 import { Route as AuthenticatedAppCoachRouteImport } from './routes/_authenticated/app.coach'
 import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
 import { Route as AuthenticatedAppAffiliatesRouteImport } from './routes/_authenticated/app.affiliates'
@@ -306,6 +307,12 @@ const AuthenticatedAppOnboardingRoute =
   AuthenticatedAppOnboardingRouteImport.update({
     id: '/onboarding',
     path: '/onboarding',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppIsolatedTestRoute =
+  AuthenticatedAppIsolatedTestRouteImport.update({
+    id: '/isolated-test',
+    path: '/isolated-test',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppCoachRoute = AuthenticatedAppCoachRouteImport.update({
@@ -721,6 +728,7 @@ export interface FileRoutesByFullPath {
   '/app/affiliates': typeof AuthenticatedAppAffiliatesRouteWithChildren
   '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/coach': typeof AuthenticatedAppCoachRoute
+  '/app/isolated-test': typeof AuthenticatedAppIsolatedTestRoute
   '/app/onboarding': typeof AuthenticatedAppOnboardingRoute
   '/app/opportunities': typeof AuthenticatedAppOpportunitiesRoute
   '/app/pages': typeof AuthenticatedAppPagesRouteWithChildren
@@ -823,6 +831,7 @@ export interface FileRoutesByTo {
   '/app/affiliates': typeof AuthenticatedAppAffiliatesRouteWithChildren
   '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/coach': typeof AuthenticatedAppCoachRoute
+  '/app/isolated-test': typeof AuthenticatedAppIsolatedTestRoute
   '/app/onboarding': typeof AuthenticatedAppOnboardingRoute
   '/app/opportunities': typeof AuthenticatedAppOpportunitiesRoute
   '/app/pages': typeof AuthenticatedAppPagesRouteWithChildren
@@ -929,6 +938,7 @@ export interface FileRoutesById {
   '/_authenticated/app/affiliates': typeof AuthenticatedAppAffiliatesRouteWithChildren
   '/_authenticated/app/billing': typeof AuthenticatedAppBillingRoute
   '/_authenticated/app/coach': typeof AuthenticatedAppCoachRoute
+  '/_authenticated/app/isolated-test': typeof AuthenticatedAppIsolatedTestRoute
   '/_authenticated/app/onboarding': typeof AuthenticatedAppOnboardingRoute
   '/_authenticated/app/opportunities': typeof AuthenticatedAppOpportunitiesRoute
   '/_authenticated/app/pages': typeof AuthenticatedAppPagesRouteWithChildren
@@ -1035,6 +1045,7 @@ export interface FileRouteTypes {
     | '/app/affiliates'
     | '/app/billing'
     | '/app/coach'
+    | '/app/isolated-test'
     | '/app/onboarding'
     | '/app/opportunities'
     | '/app/pages'
@@ -1137,6 +1148,7 @@ export interface FileRouteTypes {
     | '/app/affiliates'
     | '/app/billing'
     | '/app/coach'
+    | '/app/isolated-test'
     | '/app/onboarding'
     | '/app/opportunities'
     | '/app/pages'
@@ -1242,6 +1254,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/affiliates'
     | '/_authenticated/app/billing'
     | '/_authenticated/app/coach'
+    | '/_authenticated/app/isolated-test'
     | '/_authenticated/app/onboarding'
     | '/_authenticated/app/opportunities'
     | '/_authenticated/app/pages'
@@ -1619,6 +1632,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/app/onboarding'
       preLoaderRoute: typeof AuthenticatedAppOnboardingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/isolated-test': {
+      id: '/_authenticated/app/isolated-test'
+      path: '/isolated-test'
+      fullPath: '/app/isolated-test'
+      preLoaderRoute: typeof AuthenticatedAppIsolatedTestRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/coach': {
@@ -2179,6 +2199,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAffiliatesRoute: typeof AuthenticatedAppAffiliatesRouteWithChildren
   AuthenticatedAppBillingRoute: typeof AuthenticatedAppBillingRoute
   AuthenticatedAppCoachRoute: typeof AuthenticatedAppCoachRoute
+  AuthenticatedAppIsolatedTestRoute: typeof AuthenticatedAppIsolatedTestRoute
   AuthenticatedAppOnboardingRoute: typeof AuthenticatedAppOnboardingRoute
   AuthenticatedAppOpportunitiesRoute: typeof AuthenticatedAppOpportunitiesRoute
   AuthenticatedAppPagesRoute: typeof AuthenticatedAppPagesRouteWithChildren
@@ -2234,6 +2255,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAffiliatesRoute: AuthenticatedAppAffiliatesRouteWithChildren,
   AuthenticatedAppBillingRoute: AuthenticatedAppBillingRoute,
   AuthenticatedAppCoachRoute: AuthenticatedAppCoachRoute,
+  AuthenticatedAppIsolatedTestRoute: AuthenticatedAppIsolatedTestRoute,
   AuthenticatedAppOnboardingRoute: AuthenticatedAppOnboardingRoute,
   AuthenticatedAppOpportunitiesRoute: AuthenticatedAppOpportunitiesRoute,
   AuthenticatedAppPagesRoute: AuthenticatedAppPagesRouteWithChildren,
