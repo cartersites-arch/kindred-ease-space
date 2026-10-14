@@ -1,6 +1,6 @@
 # Automatic company onboarding fix — October 14, 2026
 
-**Fixed and verified in the isolated environment. Live rollout has not been performed.** Twenty completely new companies signed up, enrolled passkeys, signed in again, automatically received their own Hub schemas, activated both products and saved their own equipment. No company schema was prepared by hand in this run.
+**Fixed, verified with 20 fresh companies in the isolated environment, and released live with the user’s explicit approval. Signup is open at the existing 20-company limit.** Twenty completely new companies signed up, enrolled passkeys, signed in again, automatically received their own Hub schemas, activated both products and saved their own equipment. No company schema was prepared by hand in this run.
 
 ## Fix
 
@@ -24,11 +24,17 @@ The test signup-IP counters were reset between batches because the harness runs 
 
 The security advisor reports informational private-table/no-policy notices only. No new `SECURITY DEFINER` function or broad DDL grant was introduced. One active owner per company, noncritical maintenance, ordinary approval and actual test JPEGs were exercised. No electronic signatures were manufactured. Calls, push, email/Slack, AI, manuals, safety-critical workflows, 100-employee load and payment checkout were excluded.
 
-## Live rollout prepared for review
+## Live release verified
 
-`production-review/` contains the existing live setup Edge Function before/after files, the corrected schema-builder template, queue migration pinned to live project `fhqmnlpgqslllzrovxbp`, and the queue-aware setup function. Proposed rollout: apply those database changes together, deploy the narrow pending/retry dispatcher change to the existing live `company-setup` function, verify it, and enable the existing Teamstead Crew signup setting at capacity 20. Existing companies, credentials, storage and billing configuration would be retained. The live site uses live Stripe billing; this test did not purchase or validate a paid subscription, and rollout would leave existing billing rules unchanged.
+The user explicitly approved the live fix and opening signup. Migration `teamstead_automatic_company_onboarding` was applied to Teamstead Sales Hub project `fhqmnlpgqslllzrovxbp`. The existing `company-setup` Edge Function is ACTIVE, version 2, digest `83a7d9b15ff5d2cc8060a1b2b67548e4c577a7d56594956097d05b9824e3d277`. Its existing signed-owner authentication remains intact. Live Chat/Hub Pages deployments were not changed for this release.
 
-Before rollout, provider checks confirmed live Crew deployment `e9942fde-e6d7-49b1-b052-22686a0ae03a`, live D1 `24543c2f-3d1f-4313-b46f-0708b6db28a1`, no provisioning schema in live Supabase, signup closed, capacity 20 and zero customer companies. Live application changes require explicit approval because the user previously prohibited modifications to Teamstead Sales Hub.
+Live scheduler `teamstead-company-provisioner` is active every five seconds under postgres; its latest scheduled run succeeded. Product identity matches the live project. Both the queue worker and company_setup remain SECURITY INVOKER. Service-role CREATE database/public schema, private-worker execution, schema-builder execution, queue UPDATE and insertion of job status all remain denied. Browser roles cannot read queue jobs. The live security advisor returned 196 informational private-table/no-policy notices, no warnings or errors.
+
+Actual HTTPS probes returned 400 for an empty unauthorized setup request and 200 with signed_out for Crew access. The live public signup page rendered the company form and all three product options. D1 identity-guarded update changed only signup_enabled to 1 and retained company_limit 20, with zero customer companies at release. The dedicated Crew D1 remains `24543c2f-3d1f-4313-b46f-0708b6db28a1`; Crew Pages remains `e9942fde-e6d7-49b1-b052-22686a0ae03a` and Hub Pages remains `d6356db3-7c51-4372-a970-de3ebd9ca069`.
+
+Existing live Stripe billing configuration and rules were unchanged. No purchase, paid subscription, payment checkout or new live customer account was created during verification. The complete 20-company signup/use evidence above is from isolated test services. The private business-owner dashboard session was unavailable in this browser session; signup settings were verified directly through the provider and the public form.
+
+`production-review/` preserves the deployed live source and rollback Edge Function snapshot locally. The Git report/source archive contains the narrow live dispatcher, identity-pinned queue and queue-aware setup SQL. No credentials are included.
 
 ## Saved source and evidence
 
