@@ -14,7 +14,27 @@ This branch prepares `cartersites-arch/kindred-ease-space` for an isolated test 
 
 The test app is deployed and its public URL responds. See the verification update below for current evidence; the earlier setup sections retain their historical context.
 
-## October 13 end-to-end verification update
+## October 13 funded generation results
+
+After the user added $10 to Paul Maurer Shows, the installed dedicated test key successfully generated real content. The earlier quota failures below are historical. No purchase or billing change was performed by the agent. All nine Yahoo drafts below used Standard (`gpt-5-nano`), are saved in workspace `0d787190-6320-49f5-b04e-25bd548cb03b`, have generation state `ready`, and opened in their editor with the real private template preview. Each category and city draft also reopened after a full reload, showing exactly its three matching fictional listings and $10–$30 daily prices.
+
+| Type / run | Saved page ID | Input / output tokens | Recorded cost (USD) |
+| --- | --- | --- | --- |
+| Resource 1 | `3af9b88c-5c47-4ab0-96e8-c5f81e0209e5` | 1007 / 783 | 0.000364 |
+| Resource 2 | `7bc9e008-c5a7-4dfa-b846-c4b41f3e1e3c` | 1009 / 1720 | 0.000739 |
+| Resource 3 | `16fa803a-fb5f-4c31-8131-20a9e397983a` | 1012 / 783 | 0.000364 |
+| Category 1 (Camping Gear) | `e247dcbf-25a9-4752-a88e-a4802a5f5310` | 814 / 416 | 0.000208 |
+| Category 2 (Garden Tools) | `c9fb0e8b-7d9c-4ff9-961d-7f34cc61d3a2` | 807 / 402 | 0.000202 |
+| Category 3 (Party Supplies) | `d52addea-d380-4386-80b4-2b842ae22f78` | 806 / 490 | 0.000237 |
+| City 1 (Test Pine City) | `7d6f268c-c120-4ae2-ba1a-821c9b449b95` | 822 / 561 | 0.000266 |
+| City 2 (Test Cedar City) | `262cbff4-c8c7-4eea-82fe-b43e9c5b3dcf` | 821 / 464 | 0.000227 |
+| City 3 (Test Maple City) | `f4f48f13-c261-45d6-b85f-10b1d6d6bbb2` | 820 / 433 | 0.000215 |
+
+Total recorded cost for these nine successful generations is **$0.002822**. This is the application's recorded provider usage cost, not a retrieved billing invoice. No pages were published. A hosted authenticated-role check confirmed Gmail can read zero Yahoo pages and has no direct UPDATE privilege on `tenant_pages`.
+
+The other nine generations await secure sign-in as `jarhead4zoe@gmail.com`. Both directions of direct-link and authenticated HTTP read/edit isolation, and the newly issued email-confirmation redirect, remain outstanding. Current completion is **9/18**, not 18/18.
+
+## October 13 end-to-end verification history
 
 The separate local checkout `isolated-test` has the Carter remote and branch shown above. The suggested parent checkout points to Derek's repository on `test/ai-page-generation` and has unrelated uncommitted edits; do not use it for this test.
 
