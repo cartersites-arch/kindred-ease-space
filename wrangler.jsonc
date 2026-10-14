@@ -7,7 +7,7 @@
   "main": "src/server.ts",
   "workers_dev": true,
   "preview_urls": false,
-  "routes": [],
+  "routes": [{ "pattern": "seo-test.teamsteadcrew.com", "custom_domain": true }],
   "vars": {
     "PUBLIC_APP_URL": "https://kindred-ease-space-test.pms-chat.workers.dev",
     "CLOUDFLARE_EDGE_WORKER": "kindred-ease-space-edge-test",

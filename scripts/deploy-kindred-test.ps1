@@ -7,6 +7,10 @@ $expectedBranch = 'test/cloudflare-kindred-ease-20261013'
 $expectedAccount = '0e91333c6994f692c3cb0e2d0e0efa02'
 $expectedWorker = 'kindred-ease-space-test'
 $expectedProject = 'jwqldxatoyeobnoibdvl'
+$expectedHostname = 'seo-test.teamsteadcrew.com'
+function Test-IsolatedRoutes($routes) {
+  return $routes.Count -eq 1 -and $routes[0].pattern -eq $expectedHostname -and $routes[0].custom_domain -eq $true
+}
 $branch = git branch --show-current
 $origin = git remote get-url origin
 if ($LASTEXITCODE -ne 0 -or $branch -ne $expectedBranch -or
@@ -19,7 +23,7 @@ if ($config.name -ne $expectedWorker -or $config.account_id -ne $expectedAccount
     $config.vars.SUPABASE_PROJECT_ID -ne $expectedProject -or
     $config.vars.SUPABASE_URL -ne "https://$expectedProject.supabase.co" -or
     $config.vars.PUBLIC_APP_URL -ne 'https://kindred-ease-space-test.pms-chat.workers.dev' -or
-    $config.routes.Count -ne 0) {
+    -not (Test-IsolatedRoutes $config.routes)) {
   throw 'Refusing deployment: configuration does not target the isolated resources.'
 }
 $env:VITE_SUPABASE_URL = $config.vars.SUPABASE_URL
@@ -32,7 +36,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Test build failed; nothing was deployed.' }
 $builtConfigPath = Join-Path $repoRoot '.output/server/wrangler.json'
 $built = Get-Content -LiteralPath $builtConfigPath -Raw | ConvertFrom-Json
 if ($built.name -ne $expectedWorker -or $built.account_id -ne $expectedAccount -or
-    $built.vars.SUPABASE_URL -ne $config.vars.SUPABASE_URL -or $built.routes.Count -ne 0) {
+    $built.vars.SUPABASE_URL -ne $config.vars.SUPABASE_URL -or -not (Test-IsolatedRoutes $built.routes)) {
   throw 'Refusing deployment: generated Worker configuration changed the target.'
 }
 # Wrangler preserves runtime secrets. No secret is read or written here.

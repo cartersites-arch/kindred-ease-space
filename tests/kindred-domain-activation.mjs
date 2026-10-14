@@ -14,9 +14,11 @@ let row,
   apiFailure = false,
   saveFailure = false,
   cfReads = 0;
+let ownershipProof = true;
+const workspace = { marketplace_domain: "", domain_verified_at: null };
 globalThis.__kindredDomainDb = {
   from(table) {
-    assert.equal(table, "workspace_domains");
+    assert.ok(["workspace_domains", "workspaces"].includes(table));
     let patch;
     const q = {
       select() {
@@ -25,7 +27,7 @@ globalThis.__kindredDomainDb = {
       eq() {
         return q;
       },
-      maybeSingle: async () => ({ data: { ...row }, error: null }),
+      maybeSingle: async () => ({ data: { ...(table === "workspaces" ? workspace : row) }, error: null }),
       update(value) {
         patch = value;
         return q;
@@ -35,7 +37,7 @@ globalThis.__kindredDomainDb = {
           return Promise.resolve({ data: null, error: { message: "test save failed" } }).then(
             resolve,
           );
-        Object.assign(row, patch);
+        Object.assign(table === "workspaces" ? workspace : row, patch);
         return Promise.resolve({ data: [{ id: row.id }], error: null }).then(resolve);
       },
     };
@@ -94,6 +96,8 @@ globalThis.fetch = async (input) => {
       ? new Response('{"success":false}', { status: 503 })
       : Response.json({ success: true, result: pendingState });
   }
+  if (url.hostname === "cloudflare-dns.com") return Response.json({ Answer: ownershipProof ? [{ data: `"${row.verification_token}"` }] : [] });
+  if (url.pathname === "/.well-known/founders-click-verify") return new Response(ownershipProof ? row.verification_token : "wrong-proof");
   return new Response(
     url.pathname.includes("founders-domain-test")
       ? "founders-click-domain-test: OK"
@@ -101,7 +105,7 @@ globalThis.fetch = async (input) => {
   );
 };
 try {
-  const { activateWorkspaceDomain } = await import(pathToFileURL(output).href);
+  const { activateWorkspaceDomain, verifyWorkspaceDomain } = await import(pathToFileURL(output).href);
   const run = () =>
     activateWorkspaceDomain({
       data: { workspaceId: "fixture-workspace", id: row.id },
@@ -160,6 +164,29 @@ try {
   const before = cfReads;
   assert.equal((await run()).ok, true);
   assert.equal(cfReads, before, "A customer-managed proxy uses its own HTTPS route check");
+  delete process.env.CLOUDFLARE_API_TOKEN;
+  const verify = () => verifyWorkspaceDomain({ data: { workspaceId: "fixture-workspace", id: row.id }, context: { userId: "fixture-owner" } });
+  reset();
+  row.connection_type = "customer_proxy";
+  row.verified = false;
+  row.verification_token = "fixture-ownership-proof";
+  const readsBeforeProof = cfReads;
+  assert.equal((await verify()).ok, true, "Customer-managed routing needs ownership proof but no shared-edge credential");
+  assert.equal(row.verified, true);
+  assert.equal(cfReads, readsBeforeProof);
+  assert.equal(workspace.marketplace_domain, row.hostname);
+  reset();
+  row.connection_type = "customer_proxy";
+  row.verified = false;
+  row.verification_token = "fixture-ownership-proof";
+  ownershipProof = false;
+  assert.equal((await verify()).ok, false, "Customer proxy mode must still reject failed ownership proof");
+  assert.equal(row.verified, false);
+  ownershipProof = true;
+  reset();
+  row.verified = false;
+  row.verification_token = "fixture-ownership-proof";
+  assert.equal((await verify()).ok, false, "Managed edge modes still require configured provisioning");
   console.log(
     "PASS: real certificate/hostname checks, lookup failures, mismatched domains, failed saves, and customer proxy mode. No external requests made.",
   );
