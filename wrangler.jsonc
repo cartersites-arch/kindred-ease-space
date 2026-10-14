@@ -3,7 +3,7 @@
   "name": "kindred-ease-space-test",
   "account_id": "0e91333c6994f692c3cb0e2d0e0efa02",
   "compatibility_date": "2026-10-13",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "main": "src/server.ts",
   "workers_dev": true,
   "preview_urls": false,
