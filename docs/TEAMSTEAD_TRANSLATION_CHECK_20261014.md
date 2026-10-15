@@ -10,6 +10,6 @@ A local regression reproduces HTTP 503 before the change and HTTP 200 afterward 
 
 Deployed the exact current production source with this single allowlist addition to `company-hub` version 5, SHA-256 `4ec37c4d6833d5e3215cf676405ef085246a9c6a1fc48b0f9cc8725ee1ae2a95`. Retained the existing custom authentication and `verify_jwt=false`. Source snapshot is archived beside this report; it is not part of the Kindred application build.
 
-Remaining blocker: a usable dedicated Gemini API key must be installed securely as a Supabase runtime secret. The prepared Secrets form has its name set to `GEMINI_API_KEY`. Google AI Studio's API keys page returned “An unknown error occurred” on initial load and one reload. No key was created and no billing was changed.
+At this initial check, a usable dedicated Gemini API key was missing. Google AI Studio's API keys page returned “An unknown error occurred” on initial load and one reload. No key was created and no billing was changed. The user subsequently chose free private on-device translation instead; the deployed solution does not require this secret.
 
-Real English-to-Spanish and Spanish-to-English browser tests, cache reload verification and further privacy regression remain pending until the secret is available. No claim that live Spanish translation now works is made.
+The subsequent implementation and real bidirectional browser/database tests are recorded in [TEAMSTEAD_OFFLINE_TRANSLATION_20261014.md](TEAMSTEAD_OFFLINE_TRANSLATION_20261014.md). That report supersedes this initial key blocker.

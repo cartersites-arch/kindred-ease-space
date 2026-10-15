@@ -1,0 +1,51 @@
+[
+  {
+    "status": "available",
+    "original": "TEST ONLY — TS-2: The motor does not start. Check the power cable.",
+    "source": "en",
+    "target": "es",
+    "translation": "TEST ONLY — TS-2: El motor no arranca. Revisa el cable de alimentación."
+  },
+  {
+    "status": "available",
+    "original": "TEST ONLY — TEST-001: Replace 2 worn belts. No repair has been completed.",
+    "source": "en",
+    "target": "es",
+    "translation": "TEST ONLY — TEST-001: Reemplazar 2 correas desgastadas. No se ha completado ninguna reparación."
+  },
+  {
+    "status": "available",
+    "original": "TEST ONLY: The door is stuck. Do not operate this equipment.",
+    "source": "en",
+    "target": "es",
+    "translation": "TEST ONLY: La puerta está atascada. No opere este equipo."
+  },
+  {
+    "status": "available",
+    "original": "SOLO PRUEBA — TS-2: El motor no arranca. Revisar el cable de alimentación.",
+    "source": "es",
+    "target": "en",
+    "translation": "SOLO PRUEBA — TS-2: The engine doesn't start. Check the power cord."
+  },
+  {
+    "status": "available",
+    "original": "SOLO PRUEBA — TEST-001: Cambiar 2 correas desgastadas. No se ha completado ninguna reparación.",
+    "source": "es",
+    "target": "en",
+    "translation": "SOLO PRUEBA — TEST-001: Change 2 worn belts. No repairs have been completed."
+  },
+  {
+    "status": "available",
+    "original": "SOLO PRUEBA: La puerta está atascada. No opere este equipo.",
+    "source": "es",
+    "target": "en",
+    "translation": "SOLO PRUEBA: The door's stuck. Do not operate this equipment."
+  },
+  {
+    "status": "available",
+    "original": "TEST ONLY — TS-2: I attached a TEST ONLY image. No physical repair has been completed.",
+    "source": "en",
+    "target": "es",
+    "translation": "TEST ONLY — TS-2: Añadí una imagen de TEST ONLY. No se ha completado ninguna reparación física."
+  }
+]
