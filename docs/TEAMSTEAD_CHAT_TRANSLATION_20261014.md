@@ -1,6 +1,6 @@
 # Automatic English/Spanish translation in Teamstead Chat
 
-Released on 2026-10-14 to https://teamsteadcrew.com, Cloudflare Pages project `teamstead-crew` in Teamstead Software. Final production deployment: `cd60f7fa-7cef-4417-adc5-d89f6e9ddfdf`. The prior production deployment `41732655-120e-4ca2-9466-b8ea0b92c29c` remains available for rollback.
+Released on 2026-10-14 to https://teamsteadcrew.com, Cloudflare Pages project `teamstead-crew` in Teamstead Software. Final production deployment: `3f3c1bee-3640-43d9-923b-e946b0ee7f64`. The prior production deployment `41732655-120e-4ca2-9466-b8ea0b92c29c` remains available for rollback.
 
 ## Delivered
 
@@ -18,7 +18,7 @@ The existing backend Worker is preserved byte for byte: SHA256 `b81271bea150f237
 
 ## Verification
 
-- TypeScript check and production frontend build passed. The inherited stylesheet emits existing Tailwind directive warnings; the established compiled application stylesheet was retained, with separate translation CSS using the existing light/dark theme variables.
+- TypeScript check and production frontend build passed. The inherited stylesheet emits existing Tailwind directive warnings; the established compiled application stylesheet was retained, with separate translation CSS inheriting surrounding text colors for readability in the existing theme.
 - State tests passed for device-language defaults, same-language skip, duplicate requests, bounded memory caching, account cancellation, separate scopes, exact links/mentions/newlines/code, failed inference, long-text fallback and signed-out behavior. These tests mock the worker and are not claimed as real translation tests.
 - Worker privacy tests passed: only public GET downloads are allowed, credentials/referrers are omitted, and text-bearing POST/query requests or unknown hosts are rejected.
 - A fictional-company hosted preview ran real local-model translation under the production CSP. English→Spanish, Spanish→English, worn belts, negative instructions and exact link/mention preservation passed. Original toggles, thread replies, saved messages and search results were verified. Preview API responses are fictional fixtures; translations are actual model/engine outputs, not simulated translation responses.
