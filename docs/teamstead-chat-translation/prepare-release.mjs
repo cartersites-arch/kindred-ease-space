@@ -1,0 +1,18 @@
+import {readFile,writeFile,cp,mkdir} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const sha=x=>createHash('sha256').update(x).digest('hex');
+const backend=await readFile('publish/_worker.js');
+if(sha(backend)!=='b81271bea150f237a1e412d20d14a7760c4370eec9ed277c9ef2f81aa93f0e6a')throw Error('Backend baseline changed');
+await cp('dist/client','publish',{recursive:true});
+await cp('public/chat-translation.css','publish/chat-translation.css');
+let html=await readFile('dist/client/index.html','utf8');
+html=html.replace(/href="\/assets\/index-[^"]+\.css"/,'href="/assets/index-ByQcKWRq.css"').replace('</head>','<link rel="stylesheet" href="/welcome.css"></head>');
+await writeFile('publish/index.html',html);
+let headers=await readFile('publish/_headers','utf8');
+headers=headers.replace("script-src 'self';", "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net blob:; worker-src 'self';").replace("connect-src 'self';", "connect-src 'self' https://huggingface.co https://*.hf.co https://*.huggingface.co https://cdn.jsdelivr.net blob: data:;");
+await writeFile('publish/_headers',headers);
+if(sha(await readFile('publish/_worker.js'))!==sha(backend))throw Error('Backend changed');
+const manifest={project:'teamstead-crew',account:'0e91333c6994f692c3cb0e2d0e0efa02',domain:'teamsteadcrew.com',d1:'24543c2f-3d1f-4313-b46f-0708b6db28a1',r2:'teamstead-chat-photos',baselineDeployment:'41732655-120e-4ca2-9466-b8ea0b92c29c',backendSha256:sha(backend),assets:{}};
+for(const file of ['index.html','_headers','offline/hf-worker.js','offline/transformers.js','chat-translation.css',html.match(/src="\/(assets\/index-[^"]+\.js)"/)[1]])manifest.assets[file]=sha(await readFile('publish/'+file));
+await writeFile('release-manifest.json',JSON.stringify(manifest,null,2));
+console.log(JSON.stringify({backendUnchanged:true,assets:manifest.assets},null,2));

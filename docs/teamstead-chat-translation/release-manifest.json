@@ -1,0 +1,17 @@
+{
+  "project": "teamstead-crew",
+  "account": "0e91333c6994f692c3cb0e2d0e0efa02",
+  "domain": "teamsteadcrew.com",
+  "d1": "24543c2f-3d1f-4313-b46f-0708b6db28a1",
+  "r2": "teamstead-chat-photos",
+  "baselineDeployment": "41732655-120e-4ca2-9466-b8ea0b92c29c",
+  "backendSha256": "b81271bea150f237a1e412d20d14a7760c4370eec9ed277c9ef2f81aa93f0e6a",
+  "assets": {
+    "index.html": "2f05ebc09b2286172b673f7bb6496709bc4a3b11f0eb850e3d423694a6f066f5",
+    "_headers": "7760b37e81a724a45598a136902a0d66f67a3ef742e0233c33a1890fc9559748",
+    "offline/hf-worker.js": "42e9041af7383ce300777a9069d97962483f5f25486bacbdc049794580619ef4",
+    "offline/transformers.js": "3e9a4ce35946bc8094c297023acfbe6051ad24c1c480a180f80c0c2f632c5ef5",
+    "chat-translation.css": "eb0a90c6ae79956bf147e7ce044a2cc51d5f7be549e68b2654b5e103ea7dea16",
+    "assets/index-dYSeq7P3.js": "dd84c9710b9b0f13cd7f6db9fca0dfb002f2b127b3e819901fccfe3ae1a615ca"
+  }
+}

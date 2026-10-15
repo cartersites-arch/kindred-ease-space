@@ -1,0 +1,15 @@
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+let source=await fs.readFile('public/offline/hf-worker.js','utf8');
+source=source.replace("import {pipeline,env} from './transformers.js';",'const env={backends:{onnx:{wasm:{}}}};const pipeline=async()=>{throw Error("Not used in network guard check");};');
+const requests=[];
+const self={location:{origin:'https://teamsteadcrew.com'},fetch:async request=>{requests.push(request);return new Response('public file');}};
+vm.runInContext(source,vm.createContext({self,Request,Response,URL,caches:{match:async()=>undefined}}));
+for(const url of ['https://huggingface.co/public-model/file','https://cdn.jsdelivr.net/runtime.wasm','https://teamsteadcrew.com/offline/transformers.js'])await self.fetch(url);
+assert.equal(requests.length,3);assert.ok(requests.every(r=>r.method==='GET'&&r.credentials==='omit'&&r.referrerPolicy==='no-referrer'));
+await assert.rejects(self.fetch('https://huggingface.co/translate',{method:'POST',body:'PRIVATE COMPANY TEXT'}));
+await assert.rejects(self.fetch('https://huggingface.co/file?text=PRIVATE'));
+await assert.rejects(self.fetch('https://unknown.example/model'));
+assert.equal(requests.length,3);
+console.log('Passed: public GET downloads only; credentials/referrers omitted; POST, text-bearing query URLs and unknown hosts rejected.');

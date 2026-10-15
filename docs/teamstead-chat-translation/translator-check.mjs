@@ -1,0 +1,19 @@
+import {build} from 'esbuild';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const built=await build({entryPoints:['lib/local-translator.js'],bundle:true,format:'iife',globalName:'Translator',write:false,alias:{'franc-min':'C:/Users/jarhe/.codex/visualizations/2026/10/14/01a137ff-5a65-7221-add4-77eed32cc661/teamstead-welcome-redesign/capacity-test/offline-translation/node_modules/franc-min/index.js'}});
+let workers=[];
+class TestWorker {constructor(){this.sent=[];workers.push(this);}postMessage(data){this.sent.push(data);}terminate(){this.terminated=true;}reply(text){this.onmessage({data:{id:this.sent.at(-1).id,translation:text}});}}
+const ctx=vm.createContext({navigator:{language:'es-MX'},Worker:TestWorker,setTimeout,clearTimeout});vm.runInContext(built.outputFiles[0].text,ctx);
+const t=ctx.Translator;t.resetScope('company-A:employee-A');assert.equal(t.deviceLanguage(),'es');
+assert.equal(await t.translate('The motor does not start.','en'),'The motor does not start.');assert.equal(workers.length,0);
+const first=t.translate('The motor does not start.','es'),duplicate=t.translate('The motor does not start.','es');
+assert.equal(workers[0].sent.length,1);workers[0].reply('El motor no arranca.');assert.equal(await first,'El motor no arranca.');assert.equal(await duplicate,'El motor no arranca.');
+await t.translate('The motor does not start.','es');assert.equal(workers[0].sent.length,1);
+const stale=t.translate('Do not operate this equipment.','es');t.resetScope('company-B:employee-B');assert.equal(await stale,null);assert.ok(workers[0].terminated);
+const fresh=t.translate('The motor does not start.','es');assert.equal(workers.length,2);workers[1].reply('El motor no arranca.');assert.equal(await fresh,'El motor no arranca.');
+const link=t.translate('Check the power cable. https://example.com/private?id=123 @Jerry\n`keep(code)`','es');workers[1].reply('Revisa el cable de alimentación.');assert.equal(await link,'Revisa el cable de alimentación. https://example.com/private?id=123 @Jerry\n`keep(code)`');
+assert.equal(await t.translate('```private source code```','es'),null);assert.equal(await t.translate('A'.repeat(6001),'es'),null);
+const failure=t.translate('The cable has been damaged.','es');workers[1].onmessage({data:{id:workers[1].sent.at(-1).id,error:'Unavailable'}});assert.equal(await failure,null);
+t.resetScope('');assert.equal(await t.translate('The motor does not start.','es'),null);
+console.log('Passed: device language, same-language skip, deduplication, memory cache, account cancellation, scope separation, links/mentions/newlines/code preservation, long-text fallback, signed-out guard. Mock worker tests cover state/privacy behavior; real inference requires browser tests.');

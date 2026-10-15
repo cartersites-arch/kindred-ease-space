@@ -1,0 +1,13 @@
+{
+  "browserTranslator": "@huggingface/transformers@4.3.1",
+  "languageDetection": "franc-min@6.2.0",
+  "englishToSpanish": {
+    "model": "Xenova/opus-mt-en-es",
+    "revision": "4b002a4c7edd54a7ced58877258b87f7efd3f892"
+  },
+  "spanishToEnglish": {
+    "model": "Xenova/opus-mt-es-en",
+    "revision": "eadfd7c658a9d8929ac3b8e996b68a68e2c7d480"
+  },
+  "note": "Evidence snapshot for the existing React frontend. The local checks refer to the installed artifact dependency path; install the pinned language detector and adjust that path when reproducing elsewhere. Runtime bundle uses the same reviewed build as the Maintenance Hub translation release."
+}
