@@ -1,3 +1,11 @@
+> **Jerry's isolated testing copy — `test/own-copy`.**
+>
+> Start with [TESTING.md](TESTING.md). The screenshot and sample page are available for UI testing. Deployment jobs are disabled, and the backend settings contain only nonfunctional test placeholders. No paid APIs or upgrades are needed.
+>
+> The original product README below is historical reference. Its live links, original-repository clone command, credential setup and deployment instructions do **not** apply to this testing branch.
+
+---
+
 # founders.click
 
 AI-powered growth engine for Sharetribe marketplace founders.
