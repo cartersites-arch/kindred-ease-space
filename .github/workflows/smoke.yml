@@ -1,3 +1,4 @@
+# OWN TEST COPY: automation is disabled; see TESTING.md.
 name: E2E Smoke
 
 # Required repo secrets:
@@ -22,6 +23,7 @@ on:
 
 jobs:
   smoke:
+    if: ${{ false }} # Testing copy: production jobs disabled.
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -58,4 +60,3 @@ jobs:
           name: smoke-screenshots
           path: /tmp/browser/smoke/
           if-no-files-found: ignore
-

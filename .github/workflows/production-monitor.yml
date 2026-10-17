@@ -1,3 +1,4 @@
+# OWN TEST COPY: automation is disabled; see TESTING.md.
 name: Production Monitor
 
 # Watches www.founders.click for the one failure a route-based cutover makes
@@ -30,6 +31,7 @@ permissions:
 
 jobs:
   probe:
+    if: ${{ false }} # Testing copy: production jobs disabled.
     name: Verify production identity
     runs-on: ubuntu-latest
     timeout-minutes: 5

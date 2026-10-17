@@ -1,3 +1,4 @@
+# OWN TEST COPY: automation is disabled; see TESTING.md.
 name: Deploy App
 
 # CANONICAL PRODUCTION DEPLOYMENT PATH for founders.click.
@@ -47,7 +48,7 @@ jobs:
     # Only main ships. workflow_dispatch can be started from any branch in the
     # GitHub UI; without this guard a dispatch from a feature branch would
     # deploy that branch to production and then report it as the release.
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && false
     steps:
       # GitHub Actions cannot read Lovable Cloud Secrets. Say that explicitly
       # rather than letting wrangler fail later with an opaque auth error that

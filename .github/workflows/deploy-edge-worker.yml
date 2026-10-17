@@ -1,3 +1,4 @@
+# OWN TEST COPY: automation is disabled; see TESTING.md.
 name: Deploy Edge Worker
 
 # Deploys edge/founders-edge/worker.js — the reverse proxy that fronts
@@ -35,6 +36,7 @@ permissions:
 
 jobs:
   deploy:
+    if: ${{ false }} # Testing copy: production jobs disabled.
     name: Deploy founders-edge
     runs-on: ubuntu-latest
     steps:
