@@ -59,12 +59,14 @@ for every earlier asset request.
 
 ## Production status
 
-NOT deployed to the live PMS Chat workspace. Production remains deployment
-`9d03c562-9a46-473e-9fba-956b8d274c7c` in `project-room`.
+Released to the live PMS Chat workspace on October 20, 2026 as deployment
+`01f24943-540f-4026-a1c5-5c689919d98d` in `project-room`. See
+`PRODUCTION_RELEASE_20261020.md` for the verified asset identity, preserved
+bindings and rollback deployment.
 
 `integrate-pms-reader.mjs` patches only the exact checked current frontend hash.
-It does not replace the backend. A production release still requires its current
-complete deployment bundle, cache handling and authenticated verification. Never
+It does not replace the backend. The production release reused the current
+complete deployment bundle and passed cache, byte-identity and live UI checks. Never
 deploy an older October 10/11 archive over newer backend features, or connect the
 fictional preview API to production records. No production database migration,
 permission change, message write, live notification or login bypass was made.
