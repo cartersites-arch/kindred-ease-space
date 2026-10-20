@@ -1,0 +1,17 @@
+import {readFile} from 'node:fs/promises';
+import {JSDOM} from 'jsdom';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const dom=new JSDOM('<div class="topbar-right"></div>');
+const calls=[];let reloads=0,fail=false;
+const ctx=vm.createContext({document:dom.window.document,window:{location:{reload(){reloads++;}}},_e:()=> 'en',$e:async payload=>{calls.push(payload);if(fail)throw Error('offline');}});
+vm.runInContext(await readFile(new URL('./pms-reader-control.js',import.meta.url),'utf8'),ctx);
+const cleanup=ctx.__pmsMountReaderControl({id:'one',language:'en'});
+let select=dom.window.document.querySelector('select');assert.equal(select.value,'en');
+select.value='es';await select.onchange();
+assert.equal(JSON.stringify(calls[0]),JSON.stringify({action:'language',language:'es',automatic:true}));assert.equal(reloads,1);
+cleanup();assert.equal(dom.window.document.querySelector('select'),null);
+ctx.__pmsMountReaderControl({id:'two',language:'es'});select=dom.window.document.querySelector('select');assert.equal(select.value,'es');
+fail=true;select.value='en';await select.onchange();assert.equal(reloads,1);assert.equal(select.value,'es');assert.equal(select.disabled,false);assert.match(dom.window.document.querySelector('[role=status]').textContent,/Not saved/);
+assert.ok(calls.every(p=>p.action==='language'&&!('body' in p)&&!('messageId' in p)));
+console.log('Passed: compact picker, employee preference initialization, existing language-only API, reload after save, visible failure/retry, cleanup. No messages written.');
