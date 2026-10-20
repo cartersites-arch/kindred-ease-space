@@ -1,11 +1,16 @@
 import {build} from 'esbuild';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
-const built=await build({entryPoints:['lib/local-translator.js'],bundle:true,format:'iife',globalName:'Translator',write:false,alias:{'franc-min':'C:/Users/jarhe/.codex/visualizations/2026/10/14/01a137ff-5a65-7221-add4-77eed32cc661/teamstead-welcome-redesign/capacity-test/offline-translation/node_modules/franc-min/index.js'}});
+const built=await build({entryPoints:[new URL('./lib/local-translator.js',import.meta.url).pathname],bundle:true,format:'iife',globalName:'Translator',write:false});
 let workers=[];
 class TestWorker {constructor(){this.sent=[];workers.push(this);}postMessage(data){this.sent.push(data);}terminate(){this.terminated=true;}reply(text){this.onmessage({data:{id:this.sent.at(-1).id,translation:text}});}}
 const ctx=vm.createContext({navigator:{language:'es-MX'},Worker:TestWorker,setTimeout,clearTimeout});vm.runInContext(built.outputFiles[0].text,ctx);
 const t=ctx.Translator;t.resetScope('company-A:employee-A');assert.equal(t.deviceLanguage(),'es');
+assert.equal(await t.translate('Atascado','en'),'Stuck');
+assert.equal(await t.translate('Stuck!','es'),'Atascado!');
+assert.equal(await t.translate('  ATASCADO!  ','en'),'  STUCK!  ');
+assert.equal(await t.translate('Atascado https://example.com/part?id=23 @Jerry','en'),'Stuck https://example.com/part?id=23 @Jerry');
+assert.equal(workers.length,0);
 assert.equal(await t.translate('The motor does not start.','en'),'The motor does not start.');assert.equal(workers.length,0);
 const first=t.translate('The motor does not start.','es'),duplicate=t.translate('The motor does not start.','es');
 assert.equal(workers[0].sent.length,1);workers[0].reply('El motor no arranca.');assert.equal(await first,'El motor no arranca.');assert.equal(await duplicate,'El motor no arranca.');

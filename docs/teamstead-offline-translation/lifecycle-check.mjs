@@ -1,0 +1,27 @@
+import {build} from 'esbuild';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const bundle=await build({entryPoints:[new URL('./client.js',import.meta.url).pathname],bundle:true,format:'iife',write:false});
+const workers=[];
+class Worker {constructor(){workers.push(this);}postMessage(data){this.sent=data;}terminate(){this.terminated=true;}reply(translation){this.onmessage({data:{id:this.sent.id,translation}});}}
+const context=vm.createContext({navigator:{language:'en-US'},window:{dispatchEvent(){}},document:{documentElement:{dataset:{}},getElementById(){return null;},readyState:'loading',addEventListener(){}},localStorage:{getItem(){},setItem(){}},Event:class{},Worker,setTimeout,clearTimeout});
+vm.runInContext(bundle.outputFiles[0].text,context);
+const api=context.window.TeamsteadOffline;
+assert.equal((await api.translate('Atascado','en')).status,'unavailable');
+api.setUser('employee-one');
+assert.equal((await api.translate('Atascado','en')).translation,'Stuck');
+assert.equal((await api.translate('Stuck!','es')).translation,'Atascado!');
+assert.equal(workers.length,0);
+const stale=api.translate('The motor does not start.','es');
+await Promise.resolve();
+api.chooseLanguage('es');workers[0].reply('El motor no arranca.');
+assert.equal((await stale).status,'unavailable');
+const crash=api.translate('The motor does not start.','es');
+await Promise.resolve();workers[0].onerror();assert.equal((await crash).status,'unavailable');
+const retry=api.translate('The motor does not start.','es');
+await Promise.resolve();assert.equal(workers.length,2);workers[1].reply('El motor no arranca.');
+assert.equal((await retry).translation,'El motor no arranca.');
+const old=api.translate('The cable has been damaged.','es');await Promise.resolve();api.setUser('employee-two');
+assert.equal((await old).status,'unavailable');assert.ok(workers[1].terminated);
+api.clear();
+console.log('Passed: short phrases, signed-out guard, language-change cancellation, worker crash/retry, account isolation. Worker responses are fixtures.');

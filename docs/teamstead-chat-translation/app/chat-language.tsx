@@ -4,6 +4,11 @@ import {deviceLanguage,resetScope,translate,detect} from '@/lib/local-translator
 type Language='en'|'es';
 const Context=createContext({language:'en' as Language,scope:'',choose:(_value:Language)=>{}});
 export function ChatLanguageProvider({scope,children}:{scope:string;children:ReactNode}){
+  // Remount language state at the account/company boundary, even when the caller
+  // reuses this provider instance during an in-app account switch.
+  return <ScopedChatLanguageProvider key={scope} scope={scope}>{children}</ScopedChatLanguageProvider>;
+}
+function ScopedChatLanguageProvider({scope,children}:{scope:string;children:ReactNode}){
   const [language,setLanguage]=useState<Language>(()=>{
     try{const saved=localStorage.getItem('teamstead-chat-language:'+scope);if(saved==='en'||saved==='es')return saved;}catch{}
     return deviceLanguage();
@@ -37,6 +42,6 @@ export function ChatMessageText({body}:{body:string}){
     <p className="message-text" lang={original?undefined:changed?language:undefined}><Text body={display}/></p>
     {changed&&<div className="chat-translation-meta"><span>{language==='es'?'Traducción automática':'Automatic translation'}</span><button type="button" aria-expanded={original} onClick={()=>setOriginal(v=>!v)}>{original?(language==='es'?'Ver traducción':'View translation'):(language==='es'?'Ver original':'View original')}</button></div>}
     {waiting&&<small className="chat-translation-meta" role="status">{language==='es'?'Preparando traducción… El original sigue visible.':'Preparing translation… Original remains visible.'}</small>}
-    {current?.text===null&&body.trim().length>=10&&<div className="chat-translation-meta"><span>{language==='es'?'Mostrando el original':'Showing original'}</span><button type="button" onClick={()=>{setResult(undefined);setAttempt(v=>v+1);}}>{language==='es'?'Reintentar traducción':'Retry translation'}</button></div>}
+    {current?.text===null&&/[a-záéíóúñü]/i.test(body)&&<div className="chat-translation-meta"><span>{language==='es'?'Traducción no disponible. Mostrando el original.':'Translation unavailable. Showing original.'}</span><button type="button" onClick={()=>{setResult(undefined);setAttempt(v=>v+1);}}>{language==='es'?'Reintentar traducción':'Retry translation'}</button></div>}
   </div>;
 }
