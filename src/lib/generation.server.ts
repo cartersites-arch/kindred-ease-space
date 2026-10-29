@@ -500,7 +500,8 @@ export const WRITE_PAGE_SCHEMA = {
     seo_description: { type: "string", description: "≤155 chars" },
     body_markdown: {
       type: "string",
-      description: "Full markdown body, 600-1200 words, no frontmatter",
+      description:
+        "Markdown body using only supported facts; length as needed by the page instructions, no frontmatter",
     },
   },
   required: ["title", "seo_title", "seo_description", "body_markdown"],

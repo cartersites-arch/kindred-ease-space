@@ -28,7 +28,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-test";
 delete process.env.OPENAI_API_KEY;
 
 import { FakeDb } from "./_support/fake-postgrest";
-import { listingKeys, makeFilter, scopeFor } from "../src/lib/coverage/target";
+import { listingKeys, makeFilter, resolveFilter, scopeFor } from "../src/lib/coverage/target";
 import { contractJson } from "../src/lib/templates/contracts";
 
 const db = new FakeDb();
@@ -297,6 +297,7 @@ const {
   effectiveGeneration,
   isGenerationActive,
   notEnoughListingsMessage,
+  suggestedTitle,
 } = await import("../src/lib/page-drafts.server");
 const { CustomerFacingError, GENERATION_IN_PROGRESS_MESSAGE, GENERATION_PAUSED_MESSAGE } =
   await import("../src/lib/generation.server");
@@ -321,6 +322,22 @@ const rid = () => `22222222-2222-4222-8222-${String(++n).padStart(12, "0")}`;
 const pages = () => db.table("tenant_pages").filter((p) => p.workspace_id === WS);
 const slotCalls = () => db.hitsOf("POST", "rpc/reserve_generation_slot").length;
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+const groundingRecords = (
+  input: string,
+): Array<{
+  record_id: string;
+  title: string;
+  location: { city: string | null; region: string | null; country: string | null };
+  category: string | null;
+  displayed_price: string | null;
+  currency: string | null;
+  description_excerpt: string | null;
+  description_truncated: boolean;
+}> =>
+  input
+    .split("\n")
+    .filter((line) => line.startsWith("{"))
+    .map((line) => JSON.parse(line));
 
 async function draft(over: Record<string, unknown> = {}) {
   try {
@@ -370,6 +387,12 @@ try {
       rowAtProviderCall?.generation_request_id == null,
     );
     t("the City Hub template id is stored", row.template_id === "tpl-city_hub");
+    const cityTitle = suggestedTitle("city_hub", resolveFilter(austin)!);
+    t(
+      "the City Hub's suggested title names its place without inventing a rental service",
+      cityTitle === "Listings in Austin, TX, US",
+      cityTitle,
+    );
     t(
       "the v2 filter is stored as given",
       JSON.stringify(row.listing_filter) === JSON.stringify(austin),
@@ -382,14 +405,16 @@ try {
     t(
       "the body, SEO title and description are persisted",
       row.body_markdown === BODY.trim() &&
-        row.seo_title === "Pools in Austin, TX — book a private pool" &&
+        row.seo_title === "Private pools in Austin, TX" &&
         /Compare private pools/.test(row.meta_description),
     );
     t(
-      "the owner's title is the H1; the writer's is kept as a suggestion",
+      "the owner's title is the H1 and search headline; the invented writer title is not persisted",
       row.title === "Private pools in Austin, TX" &&
         row.h1 === row.title &&
-        row.generation.suggested_title === "A better title from the writer",
+        row.seo_title === row.title &&
+        !("suggested_title" in row.generation) &&
+        !JSON.stringify(row).includes("A better title from the writer"),
     );
     t(
       "generation_request_id is written on delivery",
@@ -405,10 +430,21 @@ try {
         typeof row.generation.elapsed_ms === "number",
     );
     const prompt = String(openaiCalls[0]?.input ?? "");
+    const records = groundingRecords(prompt);
     t(
       "the prompt has the EXACT count for Austin (7), not other workspaces' listings",
       /Published listings matching this page: 7 \(exact count/.test(prompt),
       prompt.slice(0, 400),
+    );
+    t(
+      "each scoped City Hub record retains only its own location",
+      records.length === 7 &&
+        records.every(
+          (record) =>
+            record.location.city === "Austin" &&
+            record.location.region === "TX" &&
+            record.location.country === "US",
+        ),
     );
     t(
       "prices are per unit: $25 – $85 per hour",
@@ -903,6 +939,216 @@ try {
       "premium maps to the server's premium model",
       openaiCalls[0]?.model === "gpt-5-mini",
       String(openaiCalls[0]?.model),
+    );
+  }
+
+  console.log("\n7. Rewrite uses current listing facts, never a prior AI summary as owner facts");
+  seed();
+  {
+    const scoped = db
+      .table("tenant_listings")
+      .filter((row) => row.workspace_id === WS)
+      .slice(0, 4);
+    const disclaimer =
+      "Dummy inventory for isolated AI generation testing. No real booking or service is offered.";
+    for (const [i, row] of scoped.entries()) {
+      const isCatalog = i === 3;
+      const values = {
+        country: isCatalog ? null : "United States",
+        state: isCatalog ? null : "California",
+        city: isCatalog ? null : "Test Cedar City",
+        category: isCatalog ? "Team Software" : "Test Garden Tools",
+      };
+      const keys = listingKeys(values);
+      Object.assign(row, values, {
+        title: isCatalog ? "Teamstead Crew" : `Isolated Test Garden Tools ${i + 1}`,
+        description: isCatalog
+          ? "A manually entered catalog record, not a Sharetribe listing. Pricing and public signup availability have not been verified."
+          : disclaimer,
+        price_amount: isCatalog ? null : (i + 1) * 1000,
+        price_currency: isCatalog ? null : "USD",
+        price_unit: isCatalog ? null : "day",
+        country_key: keys.countryKey,
+        region_key: keys.regionKey,
+        city_key: keys.cityKey,
+        category_key: keys.categoryKey,
+      });
+    }
+    db.tables.tenant_listings = scoped;
+    const ownerSummary =
+      "An editorial guide for comparing the catalog entries, not a statement about bookability.";
+    const resourceTitle =
+      "Premium AI test draft — compare the marketplace records without assuming shared services";
+    const created = await draft({
+      kind: "resource_article",
+      filter: article,
+      title: resourceTitle,
+      description: ownerSummary,
+      brief: "Compare only facts supported by the individual listings.",
+    });
+    t("the initial fixture article is ready", created.r?.outcome === "ready", errMsg(created.err));
+    const firstInput = String(openaiCalls[0]?.input ?? "");
+    const firstRecords = groundingRecords(firstInput);
+    t("a new draft still carries the owner's editorial summary", firstInput.includes(ownerSummary));
+    t(
+      "the actual provider input retains the fictional inventory limitation",
+      firstRecords.filter((record) => record.description_excerpt === disclaimer).length === 3,
+    );
+    t(
+      "the actual provider input retains the catalog limitation",
+      firstRecords
+        .find((record) => record.title === "Teamstead Crew")
+        ?.description_excerpt?.includes("not a Sharetribe listing") === true,
+    );
+
+    const row = pages()[0]!;
+    const originalHeadline = row.seo_title;
+    t(
+      "a long owner title stays intact while its SEO headline is a bounded owner-title prefix",
+      row.title === resourceTitle &&
+        row.h1 === resourceTitle &&
+        originalHeadline.length > 50 &&
+        originalHeadline.length <= 60 &&
+        resourceTitle.startsWith(originalHeadline),
+    );
+    const inventedSummary =
+      "All four listings are GPU-server rentals in Test Cedar City with guaranteed booking slots.";
+    row.meta_description = inventedSummary;
+    row.generation.description = inventedSummary;
+    row.generation.suggested_title = "All four listings are GPU-server rentals";
+    const currentNotes =
+      "Use the catalog facts only; do not turn the test title into claims about these listings.";
+    scoped[0]!.description = `${disclaimer} Listing description refreshed before Rewrite.`;
+    const rewritten = await runPageDraft({
+      workspaceId: WS,
+      userId: USER,
+      requestId: rid(),
+      tier: "premium",
+      mode: "regenerate",
+      pageId: row.id,
+      brief: currentNotes,
+    });
+    const rewriteInput = String(openaiCalls[1]?.input ?? "");
+    const rewriteRecords = groundingRecords(rewriteInput);
+    t(
+      "Rewrite sends one new provider call and keeps the same private draft",
+      rewritten.outcome === "ready" &&
+        openaiCalls.length === 2 &&
+        pages().length === 1 &&
+        pages()[0]?.id === row.id &&
+        pages()[0]?.status === "draft",
+    );
+    t(
+      "Rewrite excludes the prior AI meta description from the actual provider request",
+      !rewriteInput.includes(inventedSummary),
+    );
+    t(
+      "Rewrite reads the current listing description instead of stale generated copy",
+      rewriteRecords
+        .find((record) => record.title === "Isolated Test Garden Tools 1")
+        ?.description_excerpt?.includes("Listing description refreshed before Rewrite.") === true,
+    );
+    t(
+      "Rewrite retains the current title as editorial topic and the new owner notes",
+      rewriteInput.includes(resourceTitle) && rewriteInput.includes(currentNotes),
+    );
+    t(
+      "Resource Rewrite preserves the owner title and SEO headline without keeping AI title suggestions",
+      pages()[0]?.title === resourceTitle &&
+        pages()[0]?.h1 === resourceTitle &&
+        pages()[0]?.seo_title === originalHeadline &&
+        !("suggested_title" in pages()[0]!.generation),
+    );
+    const catalogRecord = rewriteRecords.find((record) => record.title === "Teamstead Crew");
+    t(
+      "Rewrite never assigns another listing's city to an unlocated catalog entry",
+      catalogRecord?.location.city === null &&
+        catalogRecord?.location.region === null &&
+        catalogRecord?.location.country === null &&
+        catalogRecord?.displayed_price === null &&
+        catalogRecord?.currency === null,
+      JSON.stringify(catalogRecord),
+    );
+    t(
+      "Resource Rewrite sends four independent records without collection-wide place or price aggregates",
+      rewriteRecords.length === 4 &&
+        !/^(?:Categories among them|Places among them|Prices)\s*[:(]/m.test(rewriteInput),
+    );
+    t(
+      "Rewrite still uses the selected server-side premium model",
+      openaiCalls[1]?.model === "gpt-5-mini",
+    );
+  }
+  seed();
+  {
+    const disclaimer =
+      "Dummy inventory for isolated AI generation testing. No real booking or service is offered.";
+    const category = "Test Garden Tools";
+    const categoryKey = listingKeys({ category }).categoryKey;
+    for (const [i, listing] of db
+      .table("tenant_listings")
+      .filter((row) => row.workspace_id === WS && row.category === "pool-spa")
+      .entries()) {
+      Object.assign(listing, {
+        title: `Isolated Test Garden Tools ${i + 1}`,
+        description: disclaimer,
+        category,
+        category_key: categoryKey,
+      });
+    }
+    const filter = makeFilter(["category"], listingKeys({ category }), { category });
+    const created = await draft({
+      kind: "category_page",
+      filter,
+      title: "Test Garden Tools — Category Page",
+      description: "Fictitious listings for testing, with no real booking service.",
+      brief: "Use only this category's listing facts.",
+    });
+    t(
+      "the fictional Category Page is ready as a draft",
+      created.r?.outcome === "ready",
+      errMsg(created.err),
+    );
+    const row = pages()[0]!;
+    const inventedSummary =
+      "These garden tools are guaranteed available for rental bookings today.";
+    row.meta_description = inventedSummary;
+    row.generation.description = inventedSummary;
+    const rewritten = await runPageDraft({
+      workspaceId: WS,
+      userId: USER,
+      requestId: rid(),
+      tier: "standard",
+      mode: "regenerate",
+      pageId: row.id,
+      brief: "Preserve the test inventory's limitations.",
+    });
+    const rewriteInput = String(openaiCalls[1]?.input ?? "");
+    const categoryRecords = groundingRecords(rewriteInput);
+    t(
+      "Category Rewrite keeps the same draft and template filter",
+      rewritten.outcome === "ready" &&
+        pages().length === 1 &&
+        row.status === "draft" &&
+        row.template_id === "tpl-category_page" &&
+        JSON.stringify(row.listing_filter) === JSON.stringify(filter),
+    );
+    t(
+      "Category Rewrite carries each matching listing's no-service disclaimer",
+      categoryRecords.length === 3 &&
+        categoryRecords.every((record) => record.description_excerpt === disclaimer),
+    );
+    t(
+      "Category Rewrite retains the exact scoped count and no unrelated listing sample",
+      /Published listings matching this page: 3 /.test(rewriteInput) &&
+        categoryRecords.every(
+          (record) =>
+            record.category === category && record.title.startsWith("Isolated Test Garden Tools "),
+        ),
+    );
+    t(
+      "Category Rewrite cannot recycle the invented old summary",
+      !rewriteInput.includes(inventedSummary),
     );
   }
 } finally {

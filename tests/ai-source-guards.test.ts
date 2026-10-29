@@ -62,8 +62,10 @@ function walk(dir: string, out: string[] = []): string[] {
   }
   return out;
 }
-const srcFiles = walk(join(ROOT, "src")).map((f) => relative(ROOT, f));
-const fnFiles = walk(join(ROOT, "supabase/functions")).map((f) => relative(ROOT, f));
+const srcFiles = walk(join(ROOT, "src")).map((f) => relative(ROOT, f).replaceAll("\\", "/"));
+const fnFiles = walk(join(ROOT, "supabase/functions")).map((f) =>
+  relative(ROOT, f).replaceAll("\\", "/"),
+);
 const filesMatching = (files: string[], re: RegExp) => files.filter((f) => re.test(read(f)));
 const same = (a: string[], b: string[]) => [...a].sort().join("\n") === [...b].sort().join("\n");
 /** The argument text of every runMeteredAiCall(...) call in a source file. */
@@ -549,7 +551,8 @@ console.log("\n=== the client bundle cannot reach the SDK or the spend flow ==="
       join(base, "index.ts"),
       join(base, "index.tsx"),
     ]) {
-      if (existsSync(cand) && statSync(cand).isFile()) return relative(ROOT, cand);
+      if (existsSync(cand) && statSync(cand).isFile())
+        return relative(ROOT, cand).replaceAll("\\", "/");
     }
     return null;
   };

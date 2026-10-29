@@ -65,7 +65,7 @@ writeFileSync(
   functionsCopy,
   FUNCTIONS_SRC.replace(RUN_ITEM_DECL, "\nexport async function runItem(")
     .replace(START_JOB_DECL, "\nexport async function startJob(")
-    .replace(PAGE_BUILDER_IMPORT, `from "${join(import.meta.dir, "_support/page-builder-stub.ts")}";`),
+    .replace(PAGE_BUILDER_IMPORT, `from ${JSON.stringify(join(import.meta.dir, "_support/page-builder-stub.ts"))};`),
 );
 const { runItem, startJob, StartGenerationJobInputSchema } = (await import(functionsCopy)) as {
   runItem: (

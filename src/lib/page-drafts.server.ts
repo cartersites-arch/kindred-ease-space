@@ -76,6 +76,7 @@ import {
   buildPagePrompt,
   formatGroundingBlock,
   minBodyCharsFor,
+  scopedGroundingLabels,
 } from "@/lib/page-grounding";
 import { readGroundingFacts } from "@/lib/page-grounding.server";
 import { findUniqueTenantSlug } from "@/lib/tenant-page-helpers.server";
@@ -600,7 +601,7 @@ export async function runPageDraft(req: DraftRequest, deps: DraftDeps = {}): Pro
   } else {
     const { data, error } = await sb()
       .from("tenant_pages")
-      .select(`${PAGE_REF_COLUMNS}, listing_filter, meta_description`)
+      .select(`${PAGE_REF_COLUMNS}, listing_filter`)
       .eq("workspace_id", ws)
       .eq("id", req.pageId)
       .maybeSingle();
@@ -615,7 +616,10 @@ export async function runPageDraft(req: DraftRequest, deps: DraftDeps = {}): Pro
     kind = slugKind;
     rawFilter = (data as any).listing_filter;
     title = String(existingPage.title ?? "").trim();
-    description = String((data as any).meta_description ?? "").trim();
+    // The saved SEO summary may itself be AI-generated. Feeding it back as
+    // owner facts can reinforce a previous invention. Rebuild from current
+    // inventory and the owner's title/notes instead.
+    description = "";
     baseSlug = validatePageRequest({ title, slug: existingPage.slug }).baseSlug;
   }
   const template = await loadUsableTemplate(kind);
@@ -737,9 +741,10 @@ export async function runPageDraft(req: DraftRequest, deps: DraftDeps = {}): Pro
       },
       deliver: async (draft) => {
         const finished = new Date(now()).toISOString();
-        const seoTitle = draft.seo_title.trim().slice(0, 70) || title.slice(0, 70);
+        // The owner controls the title/H1. Reuse it for the search headline
+        // rather than let the writer introduce a different collection-wide claim.
+        const seoTitle = title.slice(0, 60).trimEnd();
         const seoDescription = draft.seo_description.trim().slice(0, 320) || description || null;
-        const suggested = draft.title.trim();
         const { data, error } = await sb()
           .from("tenant_pages")
           .update({
@@ -756,9 +761,6 @@ export async function runPageDraft(req: DraftRequest, deps: DraftDeps = {}): Pro
               state: "ready",
               finished_at: finished,
               elapsed_ms: Date.parse(finished) - Date.parse(generation.started_at),
-              ...(suggested && suggested !== title
-                ? { suggested_title: suggested.slice(0, 140) }
-                : {}),
             },
           })
           .eq("id", claimed.id)
@@ -831,9 +833,10 @@ export async function draftStatus(
 
 /** "Pool in Austin, TX" — the default H1 for a target (the owner can change it). */
 export function suggestedTitle(kind: PageKind, filter: ResolvedFilter): string {
-  const cat = humanLabel(filter.labels.category);
-  const place = placeLabel(filter.labels);
-  if (kind === "city_hub") return cat ? `${cat} in ${place}` : `Rentals in ${place}`;
+  const labels = scopedGroundingLabels(filter);
+  const cat = humanLabel(labels.category);
+  const place = placeLabel(labels);
+  if (kind === "city_hub") return cat ? `${cat} in ${place}` : `Listings in ${place}`;
   // Long enough to publish (the contract's TITLE_MIN is 10): a bare category
   // name ("Pool") would be paid for and then refused at publish.
   if (kind === "category_page")
