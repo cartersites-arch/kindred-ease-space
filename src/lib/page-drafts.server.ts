@@ -79,6 +79,7 @@ import {
   scopedGroundingLabels,
 } from "@/lib/page-grounding";
 import { readGroundingFacts } from "@/lib/page-grounding.server";
+import { normalizeRequiredNotice, withRequiredNotice } from "@/lib/page-required-notice";
 import { findUniqueTenantSlug } from "@/lib/tenant-page-helpers.server";
 
 const sb = () => supabaseAdmin as any;
@@ -214,6 +215,7 @@ export type GenerationState = {
   finished_at?: string;
   elapsed_ms?: number;
   brief?: string;
+  required_notice?: string;
   description?: string;
   error?: string;
   model?: string;
@@ -483,6 +485,7 @@ export type DraftRequest = {
   requestId: string;
   tier: AiQualityTier;
   brief?: string | null;
+  requiredNotice?: string;
 } & (
   | {
       mode: "new";
@@ -636,6 +639,15 @@ export async function runPageDraft(req: DraftRequest, deps: DraftDeps = {}): Pro
   const brief = (req.brief ?? existingPage?.generation?.brief ?? "")
     .trim()
     .slice(0, BRIEF_MAX_CHARS);
+  let requiredNotice: string;
+  try {
+    // Older clients omit this field; only an explicit empty string clears it.
+    requiredNotice = normalizeRequiredNotice(
+      req.requiredNotice ?? existingPage?.generation?.required_notice,
+    );
+  } catch (e) {
+    throw new CustomerFacingError(e instanceof Error ? e.message : "Required notice is invalid.");
+  }
   const facts = await readGroundingFacts(ws, kind, target.filter, target.listingCount);
   const prompt = {
     instructions: PAGE_SYSTEM_PROMPT,
@@ -644,6 +656,7 @@ export async function runPageDraft(req: DraftRequest, deps: DraftDeps = {}): Pro
       title,
       description,
       brief,
+      requiredNotice,
       grounding: formatGroundingBlock(facts),
     }),
     minBodyChars: minBodyCharsFor(kind),
@@ -675,6 +688,7 @@ export async function runPageDraft(req: DraftRequest, deps: DraftDeps = {}): Pro
     source: "builder",
     started_at: new Date(now()).toISOString(),
     ...(brief ? { brief } : {}),
+    ...(requiredNotice ? { required_notice: requiredNotice } : {}),
     ...(description ? { description } : {}),
   };
   let claimed: PageRefRow;
@@ -752,7 +766,7 @@ export async function runPageDraft(req: DraftRequest, deps: DraftDeps = {}): Pro
             h1: title,
             seo_title: seoTitle,
             meta_description: seoDescription,
-            body_markdown: draft.body_markdown.trim(),
+            body_markdown: withRequiredNotice(draft.body_markdown, requiredNotice),
             generation_request_id: req.requestId,
             generation_billing_mode: draft.billingMode,
             content_version: claimedVersion + 1,

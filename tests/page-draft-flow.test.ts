@@ -21,6 +21,8 @@
  *     regenerating fills the SAME row; a refusal before the provider call
  *     removes the empty row it created;
  *   - replay by request id never calls the provider again;
+ *   - an owner's required notice survives model omission and rewrites,
+ *     stays literal text, and adds no provider call or spend settlement;
  *   - drafts only: a published page is never regenerated.
  */
 process.env.SUPABASE_URL = "http://supabase.test";
@@ -1149,6 +1151,167 @@ try {
     t(
       "Category Rewrite cannot recycle the invented old summary",
       !rewriteInput.includes(inventedSummary),
+    );
+  }
+  console.log("\n8. Required notices survive model omission, rewrite and request replay");
+  for (const tier of ["standard", "premium"] as const) {
+    seed();
+    const notice = "This is an isolated test with a fictional city and dummy listings";
+    const replacement = "This inventory is for testing only and no real service is offered";
+    const requestId = rid();
+    let noticeAtProviderCall: unknown;
+    onOpenAi = () => {
+      noticeAtProviderCall = pages()[0]?.generation?.required_notice;
+    };
+    const created = await draft({
+      requestId,
+      tier,
+      requiredNotice: `  ${notice}\t `,
+    });
+    const row = pages()[0]!;
+    t(`${tier}: fixture AI intentionally omits the required warning`, !BODY.includes(notice));
+    t(
+      `${tier}: a draft with a required notice is ready`,
+      created.r?.outcome === "ready",
+      errMsg(created.err),
+    );
+    t(
+      `${tier}: normalized notice is persisted before the provider call`,
+      noticeAtProviderCall === notice,
+    );
+    t(
+      `${tier}: delivery prefixes the complete warning even though AI omitted it`,
+      row.body_markdown === `${notice}\n\n${BODY.trim()}` &&
+        row.generation.required_notice === notice,
+    );
+    t(
+      `${tier}: adding the notice uses one provider call, one spend hold and one settlement`,
+      openaiCalls.length === 1 &&
+        db.hitsOf("POST", "rpc/ai_reserve").length === 1 &&
+        settles.length === 1 &&
+        slotCalls() === 1 &&
+        row.generation.credits_charged === 0,
+    );
+    const savedBody = row.body_markdown;
+    const savedVersion = row.content_version;
+    const replayed = await draft({ requestId, tier, requiredNotice: replacement });
+    t(
+      `${tier}: replay returns the existing result without changing its notice or version`,
+      replayed.r?.outcome === "ready" &&
+        replayed.r.replayed &&
+        row.body_markdown === savedBody &&
+        row.content_version === savedVersion &&
+        row.generation.required_notice === notice,
+    );
+    t(
+      `${tier}: replay makes no additional provider, reservation or settlement call`,
+      openaiCalls.length === 1 &&
+        db.hitsOf("POST", "rpc/ai_reserve").length === 1 &&
+        settles.length === 1 &&
+        slotCalls() === 1,
+    );
+    const rewrite = (extra: { requiredNotice?: string; brief?: string } = {}) =>
+      runPageDraft({
+        workspaceId: WS,
+        userId: USER,
+        requestId: rid(),
+        tier,
+        mode: "regenerate",
+        pageId: row.id,
+        ...extra,
+      });
+    const inherited = await rewrite({ brief: "Use current listing facts only" });
+    t(
+      `${tier}: omitted rewrite notice inherits independently of changed writer notes`,
+      inherited.outcome === "ready" &&
+        row.generation.required_notice === notice &&
+        row.generation.brief === "Use current listing facts only" &&
+        row.body_markdown === `${notice}\n\n${BODY.trim()}`,
+    );
+    const replaced = await rewrite({ requiredNotice: replacement });
+    t(
+      `${tier}: an explicit replacement supersedes the previous required notice`,
+      replaced.outcome === "ready" &&
+        row.generation.required_notice === replacement &&
+        row.body_markdown === `${replacement}\n\n${BODY.trim()}` &&
+        !row.body_markdown.includes(notice),
+    );
+    const cleared = await rewrite({ requiredNotice: "" });
+    t(
+      `${tier}: an explicit empty notice clears persistence and generated prefix`,
+      cleared.outcome === "ready" &&
+        !("required_notice" in row.generation) &&
+        row.body_markdown === BODY.trim(),
+    );
+    const stillCleared = await rewrite();
+    t(
+      `${tier}: a later omitted field does not resurrect a cleared notice`,
+      stillCleared.outcome === "ready" &&
+        !("required_notice" in row.generation) &&
+        row.body_markdown === BODY.trim(),
+    );
+    t(
+      `${tier}: four rewrites each add exactly one call and settlement to the original draft`,
+      pages().length === 1 &&
+        row.status === "draft" &&
+        openaiCalls.length === 5 &&
+        db.hitsOf("POST", "rpc/ai_reserve").length === 5 &&
+        settles.length === 5 &&
+        slotCalls() === 5,
+    );
+  }
+  seed();
+  {
+    const legacyBrief =
+      "Clearly state this is an isolated test with a fictional city and dummy listings.";
+    const created = await draft({ brief: legacyBrief });
+    const row = pages()[0]!;
+    const rewritten = await runPageDraft({
+      workspaceId: WS,
+      userId: USER,
+      requestId: rid(),
+      tier: "standard",
+      mode: "regenerate",
+      pageId: row.id,
+    });
+    t(
+      "legacy create and rewrite without a notice keep existing behavior and writer notes",
+      created.r?.outcome === "ready" &&
+        rewritten.outcome === "ready" &&
+        row.generation.brief === legacyBrief &&
+        !("required_notice" in row.generation) &&
+        row.body_markdown === BODY.trim() &&
+        openaiCalls.length === 2 &&
+        settles.length === 2,
+    );
+  }
+  seed();
+  {
+    openaiBehavior = "thin";
+    const notice = "x".repeat(500);
+    const rejected = await draft({ requiredNotice: notice });
+    t(
+      "a long required notice cannot rescue a truncated model response",
+      rejected.r?.outcome === "failed" &&
+        pages()[0]?.generation.required_notice === notice &&
+        pages()[0]?.body_markdown === null &&
+        openaiCalls.length === 1 &&
+        settles.length === 1,
+    );
+  }
+  seed();
+  {
+    const rejected = await draft({ requiredNotice: "x".repeat(501) });
+    t(
+      "an overlong notice is a customer-facing refusal before creating or spending",
+      rejected.err instanceof CustomerFacingError &&
+        /500/.test(errMsg(rejected.err)) &&
+        pages().length === 0 &&
+        slotCalls() === 0 &&
+        openaiCalls.length === 0 &&
+        db.hitsOf("POST", "rpc/ai_reserve").length === 0 &&
+        settles.length === 0,
+      errMsg(rejected.err),
     );
   }
 } finally {

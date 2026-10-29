@@ -34,6 +34,7 @@ import { loadCoverage } from "@/lib/coverage/coverage.server";
 import { TEMPLATE_CONTRACTS } from "@/lib/templates/contracts";
 import { TITLE_MIN } from "@/lib/seo/page-contract";
 import { BRIEF_MAX_CHARS, describePrices, listingPriceText } from "@/lib/page-grounding";
+import { REQUIRED_NOTICE_MAX_CHARS } from "@/lib/page-required-notice";
 import {
   checkTarget,
   draftStatus,
@@ -239,6 +240,7 @@ export const CreateDraftInputSchema = z
     slug: z.string().trim().max(80).optional(),
     description: z.string().trim().max(300).optional().default(""),
     brief: z.string().trim().max(BRIEF_MAX_CHARS).optional().default(""),
+    requiredNotice: z.string().trim().max(REQUIRED_NOTICE_MAX_CHARS).optional(),
     // A quality TIER, never a model: the server maps it.
     quality: z.enum(GENERATION_TIERS).default(GENERATION_DEFAULT_TIER),
   })
@@ -259,6 +261,7 @@ export const createPageDraft = createServerFn({ method: "POST" })
             requestId: data.requestId,
             tier: data.quality,
             brief: data.brief,
+            requiredNotice: data.requiredNotice,
             mode: "new",
             kind: data.kind,
             filter: data.filter,
@@ -276,6 +279,7 @@ export const RegenerateInputSchema = z
     requestId: z.string().uuid(),
     pageId: z.string().uuid(),
     brief: z.string().trim().max(BRIEF_MAX_CHARS).optional(),
+    requiredNotice: z.string().trim().max(REQUIRED_NOTICE_MAX_CHARS).optional(),
     quality: z.enum(GENERATION_TIERS).default(GENERATION_DEFAULT_TIER),
   })
   .strict();
@@ -295,6 +299,7 @@ export const regeneratePageDraft = createServerFn({ method: "POST" })
             requestId: data.requestId,
             tier: data.quality,
             brief: data.brief ?? null,
+            requiredNotice: data.requiredNotice,
             mode: "regenerate",
             pageId: data.pageId,
           }),

@@ -26,6 +26,7 @@ import { qualityForRequest } from "@/components/ai/model-choice";
 import { TemplateRenderer, type TemplateData } from "@/components/templates/registry";
 import { newRequestId, timeAgo, useCurrentWorkspace } from "@/components/pages/use-workspace";
 import { pageStatusLabel } from "@/components/pages/page-status";
+import { REQUIRED_NOTICE_MAX_CHARS } from "@/lib/page-required-notice";
 import {
   archivePage,
   deletePage,
@@ -105,11 +106,34 @@ function EditPage() {
   const [quality, setQuality] = useState("");
   const [showRegen, setShowRegen] = useState(false);
   const [regenBrief, setRegenBrief] = useState("");
+  const [regenRequiredNotice, setRegenRequiredNotice] = useState("");
+  const loadedNoticeVersion = useRef<{
+    pageId: string;
+    version: number;
+    notice: string;
+  } | null>(null);
   const regenId = useRef(newRequestId());
 
   // Load the server's version into the form (again after every save/refresh
   // that moved the version, never over unsaved typing).
   const page = editor.data?.page;
+  const noticePageId = page?.id;
+  const noticeVersion = page?.version;
+  const savedRequiredNotice = page?.generation?.required_notice ?? "";
+  useEffect(() => {
+    if (!noticePageId || noticeVersion === undefined) return;
+    const loaded = loadedNoticeVersion.current;
+    if (loaded?.pageId === noticePageId && noticeVersion <= loaded.version) return;
+    loadedNoticeVersion.current = {
+      pageId: noticePageId,
+      version: noticeVersion,
+      notice: savedRequiredNotice,
+    };
+    setRegenRequiredNotice((current) =>
+      loaded?.pageId === noticePageId && current !== loaded.notice ? current : savedRequiredNotice,
+    );
+  }, [noticePageId, noticeVersion, savedRequiredNotice]);
+
   useEffect(() => {
     if (!page) return;
     const f: Fields = {
@@ -282,6 +306,7 @@ function EditPage() {
             requestId: regenId.current,
             pageId: id,
             brief: regenBrief.trim(),
+            requiredNotice: regenRequiredNotice.trim(),
             quality: qualityForRequest(quality),
           },
         });
@@ -646,6 +671,21 @@ function EditPage() {
                   The writer starts again from your current listing data. Your present text is
                   replaced only if the new draft is written successfully.
                 </p>
+                <div className="space-y-1.5">
+                  <Label htmlFor="regen-required-notice">Required notice (optional)</Label>
+                  <Textarea
+                    id="regen-required-notice"
+                    aria-describedby="regen-required-notice-help"
+                    rows={3}
+                    maxLength={REQUIRED_NOTICE_MAX_CHARS}
+                    value={regenRequiredNotice}
+                    onChange={(e) => setRegenRequiredNotice(e.target.value)}
+                  />
+                  <p id="regen-required-notice-help" className="text-xs text-muted-foreground">
+                    Public text added at the beginning of each AI draft. Clear this field to stop
+                    adding it automatically.
+                  </p>
+                </div>
                 <Field label="Notes for the writer">
                   <Textarea
                     rows={3}

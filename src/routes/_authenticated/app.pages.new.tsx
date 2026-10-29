@@ -36,6 +36,7 @@ import {
 } from "@/lib/pages.functions";
 import type { PageKind } from "@/lib/coverage/target";
 import { TITLE_MIN } from "@/lib/seo/page-contract";
+import { REQUIRED_NOTICE_MAX_CHARS } from "@/lib/page-required-notice";
 
 const searchSchema = z.object({
   target: z.string().max(400).optional(),
@@ -110,6 +111,7 @@ function NewPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [brief, setBrief] = useState("");
+  const [requiredNotice, setRequiredNotice] = useState("");
   const [quality, setQuality] = useState("");
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [elapsed, setElapsed] = useState(0);
@@ -203,6 +205,7 @@ function NewPage() {
           slug: slug.trim() || undefined,
           description: description.trim(),
           brief: brief.trim(),
+          requiredNotice: requiredNotice.trim(),
           quality: qualityForRequest(quality),
         },
       });
@@ -505,6 +508,21 @@ function NewPage() {
                         maxLength={300}
                         onChange={(e) => setDescription(e.target.value)}
                       />
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label htmlFor="required-notice">Required notice (optional)</Label>
+                      <Textarea
+                        id="required-notice"
+                        aria-describedby="required-notice-help"
+                        rows={3}
+                        maxLength={REQUIRED_NOTICE_MAX_CHARS}
+                        value={requiredNotice}
+                        onChange={(e) => setRequiredNotice(e.target.value)}
+                      />
+                      <p id="required-notice-help" className="text-xs text-muted-foreground">
+                        Public text added at the beginning of each AI draft. Use this for wording
+                        readers must see.
+                      </p>
                     </div>
                     <div className="space-y-1.5 sm:col-span-2">
                       <Label htmlFor="brief">Notes for the writer (optional)</Label>
