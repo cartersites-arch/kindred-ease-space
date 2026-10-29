@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { createFileRoute, Link, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
 import {
@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,10 +34,42 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 function AppShell() {
+  return (
+    <SidebarProvider>
+      <AppShellContent />
+    </SidebarProvider>
+  );
+}
+
+function AppShellContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setOpenMobile } = useSidebar();
   const [me, setMe] = useState<Awaited<ReturnType<typeof getMe>> | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // The shell survives navigation, so its mobile modal must close explicitly.
+  // This also covers browser back/forward and navigation outside the sidebar.
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [location.href, setOpenMobile]);
+
+  const closeMobileNavigation = (event: MouseEvent<HTMLAnchorElement>) => {
+    const target = event.currentTarget.getAttribute("target");
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.shiftKey ||
+      (target && target !== "_self")
+    )
+      return;
+    // A tap on the current page needs to dismiss the menu too. Leave routing
+    // and the desktop sidebar state alone; no reload or page remount is needed.
+    setOpenMobile(false);
+  };
 
   useEffect(() => {
     getMe()
@@ -145,127 +178,126 @@ function AppShell() {
     : null;
 
   return (
-    <SidebarProvider>
-      <div className="dark min-h-screen flex w-full bg-background text-foreground">
-        <Sidebar>
-          <SidebarHeader className="border-b border-sidebar-border">
-            <Link to="/app" className="px-2 py-3 flex items-center gap-2">
-              {activeWorkspace?.logo_url ? (
-                <img
-                  src={activeWorkspace.logo_url}
-                  alt=""
-                  className="h-7 w-7 rounded object-contain bg-white/5"
-                />
-              ) : (
-                <div
-                  className="h-7 w-7 rounded flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: activeWorkspace?.brand_color ?? "hsl(var(--primary))" }}
-                >
-                  {workspaceInitial(activeWorkspace?.brand_name, activeWorkspace?.name)}
+    <div className="dark min-h-screen flex w-full bg-background text-foreground">
+      <Sidebar>
+        <SidebarHeader className="border-b border-sidebar-border">
+          <Link
+            to="/app"
+            onClick={closeMobileNavigation}
+            className="px-2 py-3 flex items-center gap-2"
+          >
+            {activeWorkspace?.logo_url ? (
+              <img
+                src={activeWorkspace.logo_url}
+                alt=""
+                className="h-7 w-7 rounded object-contain bg-white/5"
+              />
+            ) : (
+              <div
+                className="h-7 w-7 rounded flex items-center justify-center text-white text-xs font-bold"
+                style={{ background: activeWorkspace?.brand_color ?? "hsl(var(--primary))" }}
+              >
+                {workspaceInitial(activeWorkspace?.brand_name, activeWorkspace?.name)}
+              </div>
+            )}
+            <div className="text-sm min-w-0">
+              <div className="font-bold tracking-tight truncate max-w-[160px]">
+                {activeWorkspace?.brand_name || activeWorkspace?.name || "founders.click"}
+              </div>
+              {activeWorkspace?.marketplace_domain && (
+                <div className="text-xs text-muted-foreground truncate max-w-[160px]">
+                  {activeWorkspace.marketplace_domain}
                 </div>
               )}
-              <div className="text-sm min-w-0">
-                <div className="font-bold tracking-tight truncate max-w-[160px]">
-                  {activeWorkspace?.brand_name || activeWorkspace?.name || "founders.click"}
-                </div>
-                {activeWorkspace?.marketplace_domain && (
-                  <div className="text-xs text-muted-foreground truncate max-w-[160px]">
-                    {activeWorkspace.marketplace_domain}
-                  </div>
-                )}
-              </div>
+            </div>
+          </Link>
+        </SidebarHeader>
+        <SidebarContent>
+          {navSections.map((section) => {
+            return (
+              <SidebarGroup key={section.label}>
+                <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {section.items.map((item) => {
+                      const Icon = item.icon;
+                      const active = activeItem?.to === item.to;
+                      return (
+                        <SidebarMenuItem key={item.to}>
+                          <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                            <Link to={item.to} onClick={closeMobileNavigation}>
+                              <Icon className="h-4 w-4" />
+                              <span className="flex-1 truncate">{item.label}</span>
+                              {item.internalOnly && (
+                                <Badge variant="secondary" className="ml-auto h-4 px-1 text-[10px]">
+                                  internal
+                                </Badge>
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          })}
+        </SidebarContent>
+        <SidebarFooter className="border-t border-sidebar-border">
+          <div className="px-2 py-2 text-xs text-muted-foreground truncate">{me?.email}</div>
+          <Button variant="ghost" size="sm" onClick={onSignOut} className="justify-start">
+            <LogOut className="h-4 w-4 mr-2" /> Sign out
+          </Button>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset className="min-w-0 overflow-x-hidden">
+        <header className="h-14 flex items-center gap-3 border-b border-border px-4">
+          <SidebarTrigger />
+          {(activeWorkspace?.plan || internalUnlimited) && planStatus && (
+            <Badge
+              variant="outline"
+              className={
+                planStatus.kind === "trial_ended" ? "border-destructive/50 text-destructive" : ""
+              }
+            >
+              {planStatus.badge}
+            </Badge>
+          )}
+          {activeWorkspace?.marketplace_domain && (
+            <span className="text-xs text-muted-foreground">
+              {activeWorkspace.marketplace_domain}
+            </span>
+          )}
+        </header>
+        {inBeta && beta && (
+          <div className="border-b border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs text-emerald-200 sm:px-6">
+            Free beta · {beta.pageLimit.toLocaleString()} page
+            {beta.pageLimit === 1 ? "" : "s"} included · no charge ·{" "}
+            <Link to="/beta" className="underline underline-offset-2 hover:text-white">
+              What's included
             </Link>
-          </SidebarHeader>
-          <SidebarContent>
-            {navSections.map((section) => {
-              return (
-                <SidebarGroup key={section.label}>
-                  <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {section.items.map((item) => {
-                        const Icon = item.icon;
-                        const active = activeItem?.to === item.to;
-                        return (
-                          <SidebarMenuItem key={item.to}>
-                            <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                              <Link to={item.to}>
-                                <Icon className="h-4 w-4" />
-                                <span className="flex-1 truncate">{item.label}</span>
-                                {item.internalOnly && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="ml-auto h-4 px-1 text-[10px]"
-                                  >
-                                    internal
-                                  </Badge>
-                                )}
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        );
-                      })}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              );
-            })}
-          </SidebarContent>
-          <SidebarFooter className="border-t border-sidebar-border">
-            <div className="px-2 py-2 text-xs text-muted-foreground truncate">{me?.email}</div>
-            <Button variant="ghost" size="sm" onClick={onSignOut} className="justify-start">
-              <LogOut className="h-4 w-4 mr-2" /> Sign out
-            </Button>
-          </SidebarFooter>
-        </Sidebar>
-        <SidebarInset className="min-w-0 overflow-x-hidden">
-          <header className="h-14 flex items-center gap-3 border-b border-border px-4">
-            <SidebarTrigger />
-            {(activeWorkspace?.plan || internalUnlimited) && planStatus && (
-              <Badge
+          </div>
+        )}
+        <main className="flex-1 w-full max-w-6xl min-w-0 px-4 py-4 sm:px-6 sm:py-6">
+          {provisionError && (
+            <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
+              <p className="font-medium text-destructive">Workspace setup didn't finish</p>
+              <p className="mt-1 text-muted-foreground">{provisionError}</p>
+              <Button
+                size="sm"
                 variant="outline"
-                className={
-                  planStatus.kind === "trial_ended" ? "border-destructive/50 text-destructive" : ""
-                }
+                className="mt-2"
+                disabled={provisioning}
+                onClick={retryProvision}
               >
-                {planStatus.badge}
-              </Badge>
-            )}
-            {activeWorkspace?.marketplace_domain && (
-              <span className="text-xs text-muted-foreground">
-                {activeWorkspace.marketplace_domain}
-              </span>
-            )}
-          </header>
-          {inBeta && beta && (
-            <div className="border-b border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs text-emerald-200 sm:px-6">
-              Free beta · {beta.pageLimit.toLocaleString()} page
-              {beta.pageLimit === 1 ? "" : "s"} included · no charge ·{" "}
-              <Link to="/beta" className="underline underline-offset-2 hover:text-white">
-                What's included
-              </Link>
+                {provisioning ? "Retrying…" : "Try again"}
+              </Button>
             </div>
           )}
-          <main className="flex-1 w-full max-w-6xl min-w-0 px-4 py-4 sm:px-6 sm:py-6">
-            {provisionError && (
-              <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
-                <p className="font-medium text-destructive">Workspace setup didn't finish</p>
-                <p className="mt-1 text-muted-foreground">{provisionError}</p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-2"
-                  disabled={provisioning}
-                  onClick={retryProvision}
-                >
-                  {provisioning ? "Retrying…" : "Try again"}
-                </Button>
-              </div>
-            )}
-            <Outlet />
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </div>
   );
 }
